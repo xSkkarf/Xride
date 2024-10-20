@@ -44,7 +44,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
               setState(() {
                 isLoading = true;
               });
-            } else {
+            } else if (state is PaymentFail) {
+              setState(() {
+                isLoading = false;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Failed to get Payment Key')),
+              );
+            }
+            else {
               setState(() {
                 isLoading = false;
               });
