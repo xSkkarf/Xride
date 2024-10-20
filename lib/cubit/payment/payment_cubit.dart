@@ -4,17 +4,36 @@ import 'package:xride/services/payment_service.dart';
 
 part 'payment_state.dart';
 
+class PaymentWebArgs {
+  final String paymentUrl;
+  Function(String) paymentStatusCallBack;
+
+  PaymentWebArgs(this.paymentUrl, this.paymentStatusCallBack);
+}
+
 class PaymentCubit extends Cubit<PaymentState> {
   final PaymentService paymentService;
   PaymentCubit(this.paymentService) : super(PaymentInitial());
 
-  Future<void> pay(int amount, Function(String) onNavigate) async {
+  Future<void> pay(int amount, Function(PaymentWebArgs) onNavigate) async {
     try {
       emit(PaymentLoading());
       
       String paymentKey = await getPaymentKey(amount);
 
-      onNavigate("https://accept.paymob.com/api/acceptance/iframes/874350?payment_token=$paymentKey");
+      PaymentWebArgs args = PaymentWebArgs("https://accept.paymob.com/api/acceptance/iframes/874350?payment_token=$paymentKey",
+        (status) {
+          if (status == "success") {
+            emit(PaymentSuccess());
+          } else {
+            emit(PaymentFail());
+          }
+        }
+      );
+
+      onNavigate(args);
+
+      // emit(PaymentSuccess());
 
     } catch (e) {
       emit(PaymentFail());
@@ -23,12 +42,12 @@ class PaymentCubit extends Cubit<PaymentState> {
 
   Future<String> getPaymentKey(int amount) async {
     try {
-        emit(PaymentkeyLoading());
+        emit(PaymentKeyLoading());
         String paymentKey = await paymentService.getPaymentKey(amount, "EGP");
-        emit(PaymentkeySuccess(paymentKey));
+        emit(PaymentKeySuccess(paymentKey));
         return paymentKey;
       } catch (e) {
-        emit(PaymentkeyFail());
+        emit(PaymentKeyFail());
         throw Exception();
       }
   }

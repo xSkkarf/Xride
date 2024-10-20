@@ -1,12 +1,13 @@
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:xride/cubit/payment/payment_cubit.dart';
 
 class PaymentWebView extends StatefulWidget {
-  final String paymentUrl;
+  final PaymentWebArgs paymentArgs;
 
   const PaymentWebView({
     super.key,
-    required this.paymentUrl,
+    required this.paymentArgs,
   });
 
   @override
@@ -17,6 +18,7 @@ class _PaymentWebViewState extends State<PaymentWebView> {
   late WebViewController webViewController;
   bool isLoading = false;
   int counter = 0;
+  bool isSuccess = false;
 
   @override
   void initState() {
@@ -51,18 +53,13 @@ class _PaymentWebViewState extends State<PaymentWebView> {
             }
             debugPrint('Url changed: ${change.url}');
             if (change.url!.contains('success=true')) {
-              Future.delayed(const Duration(seconds: 2), () {
+              isSuccess = true;
+              Future.delayed(const Duration(seconds: 4), () {
                 if(mounted) Navigator.pop(context);
               });
-              
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Payment Successful')),
-              );
+
             } else if (change.url!.contains('success=false')) {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Payment Failed')),
-              );
+              if(mounted) Navigator.pop(context);
             }
           },
         ),
@@ -75,7 +72,7 @@ class _PaymentWebViewState extends State<PaymentWebView> {
           );
         },
       )
-      ..loadRequest(Uri.parse(widget.paymentUrl));
+      ..loadRequest(Uri.parse(widget.paymentArgs.paymentUrl));
 
     webViewController = controller;
   }
@@ -99,5 +96,6 @@ class _PaymentWebViewState extends State<PaymentWebView> {
   @override
   void dispose() {
     super.dispose();
+    widget.paymentArgs.paymentStatusCallBack(isSuccess ? 'success' : 'fail');
   }
 }

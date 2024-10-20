@@ -14,8 +14,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   final TextEditingController amountController = TextEditingController();
   bool isLoading = false;
 
-  void onNavigate(String url) {
-    Navigator.pushNamed(context, AppRouter.paymentWebScreen, arguments: url);
+  void onNavigate(PaymentWebArgs args) {
+    Navigator.pushNamed(context, AppRouter.paymentWebScreen, arguments: args);
   }
 
   void payAmount() {
@@ -40,22 +40,31 @@ class _PaymentScreenState extends State<PaymentScreen> {
         ),
         body: BlocListener<PaymentCubit, PaymentState>(
           listener: (context, state) {
-            if (state is PaymentkeyLoading) {
+            if (state is PaymentKeyLoading) {
               setState(() {
                 isLoading = true;
               });
-            } else if (state is PaymentFail) {
+            } else if (state is PaymentKeyFail) {
               setState(() {
                 isLoading = false;
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Failed to get Payment Key')),
               );
-            }
-            else {
+            } else if (state is PaymentKeySuccess) {
               setState(() {
                 isLoading = false;
               });
+            }
+
+            if (state is PaymentFail) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Payment Failed')),
+              );
+            } else if (state is PaymentSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Payment Successful')),
+              );
             }
           },
           child: BlocBuilder<PaymentCubit, PaymentState>(
@@ -66,25 +75,29 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                        Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: TextField(
-                          controller: amountController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Enter Payment Amount',
+                          Text(
+                            'Wallet Balance: \$100',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
-                        ),
-                        ),
-                      const SizedBox(height: 20),
-                      (isLoading)
-                          ? const CircularProgressIndicator()
-                          : (ElevatedButton(
-                              onPressed: payAmount,
-                              child: const Text('Proceed to Payment'),
-                            )),
-                    ])),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: TextField(
+                              controller: amountController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText: 'Enter Payment Amount',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          (isLoading)
+                              ? const CircularProgressIndicator()
+                              : (ElevatedButton(
+                                  onPressed: payAmount,
+                                  child: const Text('Proceed to Payment'),
+                                )),
+                        ])),
               );
             },
           ),
