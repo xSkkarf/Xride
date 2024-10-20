@@ -7,9 +7,9 @@ final class PaymentInitial extends PaymentState {}
 final class PaymentLoading extends PaymentState {}
 final class PaymentSuccess extends PaymentState {}
 final class PaymentFail extends PaymentState {}
-final class PaymentkeyLoading extends PaymentState {}
-final class PaymentkeySuccess extends PaymentState {
+final class PaymentKeyLoading extends PaymentState {}
+final class PaymentKeySuccess extends PaymentState {
   final String paymentKey;
-  PaymentkeySuccess(this.paymentKey);
+  PaymentKeySuccess(this.paymentKey);
 }
-final class PaymentkeyFail extends PaymentState {}
+final class PaymentKeyFail extends PaymentState {}

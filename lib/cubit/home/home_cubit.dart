@@ -26,7 +26,6 @@ class HomeCubit extends Cubit<HomeState> {
       emit(UserLoading());
       final user = await userRepo.fetchUserProfile();
       emit(UserFetchSuccess(user));
-      print('username: ${user.username}');
       
     } catch (e) {
       emit(UserFetchFail(e.toString()));

@@ -43,7 +43,7 @@ class AppRouter {
         );
       case paymentWebScreen:
         return MaterialPageRoute(
-          builder: (BuildContext context) => PaymentWebView(paymentUrl: settings.arguments as String)
+          builder: (BuildContext context) => PaymentWebView(paymentArgs: settings.arguments as PaymentWebArgs)
         );
     }
     return null;
