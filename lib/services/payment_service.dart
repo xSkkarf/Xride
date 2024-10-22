@@ -17,14 +17,6 @@ class PaymentService{
       String userId = getUserId().toString();
       String accessToken = getAccessToken().toString(); 
 
-      try{
-        Future<int> statusCode = initializePayment(userId, orderId, amount, currency, authanticationToken, accessToken);
-        if(statusCode != Future.value(200)){
-          throw Exception();
-        }
-      } catch(e){
-        throw Exception();
-      }
 
       String paymentKey= await getPaymentToken(
         authanticationToken: authanticationToken,
@@ -33,6 +25,16 @@ class PaymentService{
         orderId: orderId.toString(),
         userId: userId,
       );
+
+      // try{
+      //   Future<int> statusCode = initializePayment(userId, orderId, amount, currency, authanticationToken, accessToken);
+      //   if(statusCode != Future.value(200)){
+      //     throw Exception();
+      //   }
+      // } catch(e){
+      //   throw Exception();
+      // }
+      
       return paymentKey;
     } catch (e) {
       throw Exception();

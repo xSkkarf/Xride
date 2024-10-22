@@ -22,14 +22,14 @@ class _LogInScreenState extends State<LogInScreen> {
       ),
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
-          if (state is AuthSuccess) {
+          if (state is UserLoggedIn) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Login Successful!')),
             );
             Navigator.pushReplacementNamed(context, AppRouter.homeScreen);
           } else if (state is AuthFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.error)),
+              const SnackBar(content: Text("Failed to log in")),
             );
           }
         },

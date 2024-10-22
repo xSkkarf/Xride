@@ -75,9 +75,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
+                          const Text(
                             'Wallet Balance: \$100',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20),

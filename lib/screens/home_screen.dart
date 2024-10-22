@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:xride/app_router.dart';
-import 'package:xride/cubit/home/home_cubit.dart';
+import 'package:xride/cubit/auth/auth_cubit.dart';
 import 'package:xride/data/user/user_model.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<HomeCubit>().fetchUserInfo();
+    context.read<AuthCubit>().fetchUserInfo();
   }
 
   void showLogoutConfirmationDialog(BuildContext parentContext) {
@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                parentContext.read<HomeCubit>().logout();
+                parentContext.read<AuthCubit>().logout();
                 Navigator.pushReplacementNamed(context, AppRouter.loginScreen);
               },
               child: const Text('Logout'),
@@ -81,7 +81,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ListTile(
               leading: const Icon(Icons.account_balance_wallet),
               title: Text(
-                (user != null) ? 'Balance: \$${user!.walletBalance}' : 'loading',
+                (user != null)
+                    ? 'Balance: \$${user!.walletBalance}'
+                    : 'loading',
               ),
             ),
             ListTile(
@@ -101,33 +103,41 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: BlocListener<HomeCubit, HomeState>(
+      body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is UserFetchSuccess) {
             setState(() {
               user = state.user;
             });
           } else if (state is UserLoggedOut) {
-            // When user is logged out, navigate to login screen
             Navigator.pushReplacementNamed(context, AppRouter.loginScreen);
-          } else if (state is HomeError) {
+          } else if (state is AuthFailure) {
             // Handle any error that may occur during logout
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(state.error),
             ));
           }
         },
-        child: BlocBuilder<HomeCubit, HomeState>(
+        child: BlocBuilder<AuthCubit, AuthState>(
           builder: (context, state) {
-            return Center(
-              child: Text(
-                'Home Screen Content, ${user?.username ?? 'loading'}',
-              ),
-            );
+            if (state is UserLoading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            } else if (state is UserFetchFail) {
+              return Center(
+                child: Text('Failed to load user info: ${state.error}'),
+              );
+            } else {
+              return Center(
+                child: Text(
+                  'Home Screen Content, ${user?.username ?? 'loading'}',
+                ),
+              );
+            }
           },
         ),
       ),
     );
   }
-
 }
