@@ -22,7 +22,6 @@ class UserRepo {
 
       if (response.statusCode == 200) {
         final UserModel user = UserModel.fromJson(response.data);
-        saveUser(user);
         return user;
       } else {
         print('Failed to fetch user profile not 200');

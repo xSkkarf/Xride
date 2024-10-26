@@ -8,16 +8,20 @@ part 'user_state.dart';
 class UserCubit extends Cubit<UserState> {
   final UserRepo userRepo;
 
-  UserCubit( this.userRepo) : super(UserInitial());
+  UserCubit(this.userRepo) : super(UserInitial());
 
   Future<void> fetchUserInfo() async {
     try {
       emit(UserLoading());
       final user = await userRepo.fetchUserProfile();
-      emit(UserFetchSuccess(user));
-      
+      updateUserData(user);
     } catch (e) {
       emit(UserFetchFail(e.toString()));
     }
+  }
+
+  void updateUserData(UserModel user) {
+    userRepo.saveUser(user);
+    emit(UserFetchSuccess(user));
   }
 }
