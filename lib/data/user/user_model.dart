@@ -34,4 +34,18 @@ class UserModel {
       nationalId: json['national_id'] ?? '',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'username': username,
+      'email': email,
+      'first_name': firstName,
+      'last_name': lastName,
+      'wallet_balance': walletBalance,
+      'phone_number': phoneNumber,
+      'address': address,
+      'national_id': nationalId,
+    };
+  }
 }
