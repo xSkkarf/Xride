@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:xride/app_router.dart';
 import 'package:xride/cubit/auth/auth_cubit.dart';
+import 'package:xride/cubit/user/user_cubit.dart';
 import 'package:xride/data/user/user_repo.dart';
 import 'package:xride/services/auth_service.dart';
 
@@ -9,7 +10,10 @@ void main() {
   runApp(
     MultiBlocProvider(providers: [
       BlocProvider<AuthCubit>(
-        create: (context) => AuthCubit(AuthService(), UserRepo()),
+        create: (context) => AuthCubit(AuthService()),
+      ),
+      BlocProvider<UserCubit>(
+        create: (context) => UserCubit(UserRepo()),
       ),
     ], child: const MyApp()),
   );

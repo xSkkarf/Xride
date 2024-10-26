@@ -15,18 +15,3 @@ class AuthFailure extends AuthState {
 final class UserLoggedOut extends AuthState {}
 
 final class UserLoggedIn extends AuthState {}
-
-
-final class UserLoading extends AuthState {}
-
-final class UserFetchSuccess extends AuthState {
-  final UserModel user;
-
-  UserFetchSuccess(this.user);
-}
-
-final class UserFetchFail extends AuthState {
-  final String error;
-
-  UserFetchFail(this.error);
-}

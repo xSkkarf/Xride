@@ -1,27 +1,13 @@
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
-import 'package:xride/data/user/user_model.dart';
-import 'package:xride/data/user/user_repo.dart';
 import 'package:xride/services/auth_service.dart';
 
 part 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthService authService;
-  final UserRepo userRepo;
 
-  AuthCubit(this.authService, this.userRepo) : super(UserLoggedOut());
-
-  Future<void> fetchUserInfo() async {
-    try {
-      emit(UserLoading());
-      final user = await userRepo.fetchUserProfile();
-      emit(UserFetchSuccess(user));
-      
-    } catch (e) {
-      emit(UserFetchFail(e.toString()));
-    }
-  }
+  AuthCubit(this.authService) : super(UserLoggedOut());
 
   Future<void> checkLoginStatus() async {
     emit(AuthLoading()); // Emit loading while checking the login status
