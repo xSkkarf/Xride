@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:xride/app_router.dart';
 import 'package:xride/cubit/payment/payment_cubit.dart';
+import 'package:xride/cubit/user/user_cubit.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -75,29 +76,36 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(
-                            'Wallet Balance: \$100',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      BlocBuilder<UserCubit, UserState>(
+                        builder: (context, state) {
+                          return Text(
+                            (state is UserFetchSuccess)
+                                ? 'Wallet Balance: \$${state.user.walletBalance}'
+                                : 'Wallet Balance: loading',
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          );
+                        },
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: TextField(
+                          controller: amountController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Enter Payment Amount',
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: TextField(
-                              controller: amountController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                labelText: 'Enter Payment Amount',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          (isLoading)
-                              ? const CircularProgressIndicator()
-                              : (ElevatedButton(
-                                  onPressed: payAmount,
-                                  child: const Text('Proceed to Payment'),
-                                )),
-                        ])),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      (isLoading)
+                          ? const CircularProgressIndicator()
+                          : (ElevatedButton(
+                              onPressed: payAmount,
+                              child: const Text('Proceed to Payment'),
+                            )),
+                    ])),
               );
             },
           ),
