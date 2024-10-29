@@ -67,7 +67,7 @@ class PaymentService{
     try {
       final Response response = await Dio().post(
         "${XConstants.baseUrl}/${XConstants.backendVersion}/user/payments/create/",
-        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+        options: Options(headers: {'Authorization': 'JWT $accessToken'}),
         data: {
           "auth_token": authanticationToken,
           "amount": amount.toString(),

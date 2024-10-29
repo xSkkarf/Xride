@@ -17,7 +17,7 @@ class UserRepo {
     try {
       final response = await Dio().get(
         '${XConstants.baseUrl}/${XConstants.backendVersion}/user/profile',
-        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+        options: Options(headers: {'Authorization': 'JWT $accessToken'}),
       );
 
       if (response.statusCode == 200) {
