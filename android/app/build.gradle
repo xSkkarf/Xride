@@ -5,6 +5,10 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+// Load .env file
+def dotenv = new Properties()
+file("../../.env").withInputStream { dotenv.load(it) }
+
 android {
     namespace = "com.example.xride"
     compileSdk = flutter.compileSdkVersion
@@ -28,6 +32,11 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Add manifest placeholder for Google Maps API key
+        manifestPlaceholders = [
+            GOOGLE_MAPS_API_KEY: dotenv['GOOGLE_MAPS_API_KEY'] ?: ""
+        ]
     }
 
     buildTypes {

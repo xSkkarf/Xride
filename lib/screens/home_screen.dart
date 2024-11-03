@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:xride/app_router.dart';
 import 'package:xride/cubit/auth/auth_cubit.dart';
+import 'package:xride/cubit/home/home_cubit.dart';
 import 'package:xride/cubit/user/user_cubit.dart';
 import 'package:xride/data/user/user_model.dart';
 
@@ -14,11 +16,19 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   UserModel? user;
+  GoogleMapController? mapController;
+  double latitude = 0.0;
+  double longitude = 0.0;
 
   @override
   void initState() {
     super.initState();
+    context.read<HomeCubit>().fetchInitialLocation();
     context.read<UserCubit>().fetchUserInfo();
+  }
+
+  void onMapCreated(GoogleMapController controller) {
+    mapController = controller;
   }
 
   @override
@@ -28,6 +38,13 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Home Screen'),
         actions: [
           IconButton(
+              onPressed: () {
+                context
+                    .read<HomeCubit>()
+                    .fetchCars(latitude.toString(), longitude.toString());
+              },
+              icon: const Icon(Icons.refresh)),
+          IconButton(
             icon: const Icon(Icons.attach_money),
             onPressed: () {
               Navigator.pushNamed(context, AppRouter.paymentScreen);
@@ -36,34 +53,55 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       drawer: const UserDrawer(),
-      body: BlocListener<AuthCubit, AuthState>(
-        listener: (context, state) {
-          if (state is UserLoggedOut) {
-            Navigator.pushReplacementNamed(context, AppRouter.loginScreen);
-          } else if (state is AuthFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(state.error),
-            ));
-          }
-        },
-        child: BlocBuilder<UserCubit, UserState>(
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<AuthCubit, AuthState>(
+            listener: (context, state) {
+              if (state is UserLoggedOut) {
+                Navigator.pushReplacementNamed(context, AppRouter.loginScreen);
+              } else if (state is AuthFailure) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                ));
+              }
+            },
+          ),
+          BlocListener<HomeCubit, HomeState>(
+            listener: (context, state) {
+              if (state is CarsError) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                ));
+              } else if (state is CarsLoaded){
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                  content: Text("Cars loaded successfully"),
+                ));
+              }
+            },
+          ),
+        ],
+        child: BlocBuilder<HomeCubit, HomeState>(
           builder: (context, state) {
-            if (state is UserLoading) {
-              return const Center(
-                child: CircularProgressIndicator(),
+            if (state is LocationLoading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is LocationLoaded) {
+              final allMarkers = <Marker>{...state.carMarkers};
+              latitude = state.locationData.latitude!;
+              longitude = state.locationData.longitude!;
+              return GoogleMap(
+                onMapCreated: onMapCreated,
+                markers: allMarkers,
+                initialCameraPosition: state.initialPosition,
+                myLocationEnabled: true,
+                myLocationButtonEnabled: true,
               );
-            } else if (state is UserFetchFail) {
+            } else if (state is LocationError) {
               return Center(
-                child: Text('Failed to load user info: ${state.error}'),
-              );
-            } else if (state is UserFetchSuccess) {
-              return Center(
-                child: Text(
-                  'Home Screen Content, ${state.user.username}',
-                ),
+                child: Text('Error: //${state.error}'),
               );
             } else {
-              return const SizedBox.shrink();
+              return const Center(child: CircularProgressIndicator());
             }
           },
         ),

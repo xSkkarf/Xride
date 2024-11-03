@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:xride/app_router.dart';
 import 'package:xride/cubit/auth/auth_cubit.dart';
 import 'package:xride/cubit/user/user_cubit.dart';
 import 'package:xride/data/user/user_repo.dart';
 import 'package:xride/services/auth_service.dart';
 
-void main() {
+Future<void> main() async {
+  await dotenv.load();
   runApp(
     MultiBlocProvider(providers: [
       BlocProvider<AuthCubit>(
