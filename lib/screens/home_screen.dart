@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:xride/app_router.dart';
 import 'package:xride/cubit/auth/auth_cubit.dart';
+import 'package:xride/cubit/car/car_cubit.dart';
 import 'package:xride/cubit/home/home_cubit.dart';
 import 'package:xride/cubit/user/user_cubit.dart';
 import 'package:xride/data/user/user_model.dart';
@@ -19,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   GoogleMapController? mapController;
   double latitude = 0.0;
   double longitude = 0.0;
+  Set<Marker> allMarkers = {};
 
   @override
   void initState() {
@@ -40,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
               onPressed: () {
                 context
-                    .read<HomeCubit>()
+                    .read<CarCubit>()
                     .fetchCars(latitude.toString(), longitude.toString());
               },
               icon: const Icon(Icons.refresh)),
@@ -66,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             },
           ),
-          BlocListener<HomeCubit, HomeState>(
+          BlocListener<CarCubit, CarState>(
             listener: (context, state) {
               if (state is CarsError) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -77,6 +79,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SnackBar(
                   content: Text("Cars loaded successfully"),
                 ));
+
+                setState(() {
+                  allMarkers = state.carMarkers;
+                });
+              }
+            },
+          ),
+          BlocListener<HomeCubit, HomeState>(
+            listener: (context, state) {
+              if (state is LocationError) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                ));
+              } else if (state is LocationLoaded){
+                context.read<CarCubit>().fetchCars(state.locationData.latitude.toString(), state.locationData.longitude.toString());
               }
             },
           ),
@@ -86,7 +103,6 @@ class _HomeScreenState extends State<HomeScreen> {
             if (state is LocationLoading) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is LocationLoaded) {
-              final allMarkers = <Marker>{...state.carMarkers};
               latitude = state.locationData.latitude!;
               longitude = state.locationData.longitude!;
               return GoogleMap(

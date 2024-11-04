@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:xride/cubit/car/car_cubit.dart';
 import 'package:xride/cubit/home/home_cubit.dart';
 import 'package:xride/cubit/payment/payment_cubit.dart';
 import 'package:xride/screens/home_screen.dart';
 import 'package:xride/screens/login_screen.dart';
 import 'package:xride/screens/payment_screen.dart';
 import 'package:xride/screens/payment_web_screen.dart';
+import 'package:xride/services/car_service.dart';
 import 'package:xride/services/home_service.dart';
 import 'package:xride/services/payment_service.dart';
 
@@ -26,6 +28,8 @@ class AppRouter {
             providers: [
               BlocProvider<HomeCubit>(
                 create: (context) => HomeCubit(HomeService())),
+              BlocProvider<CarCubit>(
+                create: (context) => CarCubit(CarService())),
             ], 
             child: const HomeScreen()),
         );

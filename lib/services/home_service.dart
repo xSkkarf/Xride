@@ -1,10 +1,15 @@
 import 'package:location/location.dart';
-import 'package:xride/data/cars/car_model.dart';
-import 'package:xride/data/cars/car_repo.dart';
 
 class HomeService {
   final Location location = Location();
-  final CarRepo carRepo = CarRepo();
+
+  // HomeService() {
+  //   // Set the desired interval for location updates (in milliseconds)
+  //   location.changeSettings(
+  //     interval: 5000, // 5 seconds
+  //     accuracy: LocationAccuracy.high,
+  //   );
+  // }
 
   Future<LocationData?> getInitialLocation() async {
     bool serviceEnabled;
@@ -34,9 +39,5 @@ class HomeService {
 
   Stream<LocationData> getLocationStream() {
     return location.onLocationChanged;
-  }
-
-  Future<List<CarModel>> fetchCars(String latitude, String longitude) async {
-    return await carRepo.fetchCars(latitude, longitude);
   }
 }
