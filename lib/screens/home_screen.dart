@@ -140,52 +140,45 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderRadius:
                                 BorderRadius.vertical(top: Radius.circular(16)),
                             boxShadow: [
-                              // Adds a shadow for better UI
                               BoxShadow(
                                 color: Colors.black12,
                                 blurRadius: 8.0,
                               ),
                             ],
                           ),
-                          child: BlocBuilder<CarCubit, CarState>(
-                            builder: (context, state) {
-                              if (state is CarsLoading) {
-                                return const Center(
-                                    child: CircularProgressIndicator());
-                              } else if (state is CarsLoaded) {
-                                allMarkers =
-                                    state.carMarkers; // Update map markers
-                                return ListView.builder(
-                                  controller:
-                                      scrollController, // Enables scrolling in sheet
-                                  itemCount: state.cars.length,
-                                  itemBuilder: (context, index) {
-                                    final car = state.cars[index];
-                                    return ListTile(
-                                      leading: const Icon(
-                                        Icons.directions_car,
-                                        color: Colors.blue,
-                                      ),
-                                      title: Text(car.carName),
-                                      subtitle: Text(
-                                          '${car.year} - \$${car.bookingPrice12H}'),
-                                      onTap: () {
-                                        Navigator.pushNamed(
-                                          context,
-                                          '/carDetails', // Navigate to car details
-                                          arguments: car,
-                                        );
-                                      },
-                                    );
-                                  },
-                                );
-                              } else if (state is CarsError) {
-                                return const Center(
-                                    child: Text('Failed to load cars'));
-                              } else {
-                                return const Center(
-                                    child: Text('No cars available.'));
+                          child: ListView.builder(
+                            controller:
+                                scrollController, // Enables scrolling in sheet
+                            itemCount: state.cars.length+1,
+                            itemBuilder: (context, index) {
+                              if (index == 0){
+                                return Container(
+                                    margin: const EdgeInsets.fromLTRB(100, 10, 100, 10),
+                                    height: 5,
+                                    width: 10,
+                                    decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(10),
+                                        color: Colors.grey),
+                                  );
                               }
+                              final car = state.cars[index-1];
+                              return ListTile(
+                                leading: const Icon(
+                                  Icons.directions_car,
+                                  color: Colors.blue,
+                                ),
+                                title: Text(car.carName),
+                                subtitle: Text(
+                                    '${car.year} - \$${car.bookingPrice12H}'),
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/carDetails', // Navigate to car details
+                                    arguments: car,
+                                  );
+                                },
+                              );
                             },
                           ),
                         );
