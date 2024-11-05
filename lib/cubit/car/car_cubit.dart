@@ -10,7 +10,7 @@ class CarCubit extends Cubit<CarState> {
   final CarService carService;
   CarCubit(this.carService) : super(CarInitial());
 
-  Future<void> fetchCars(String latitude, String longitude) async {
+  Future<void> fetchCars(String latitude, String longitude, Function(CarModel) onTap) async {
     try {
       final List<CarModel> cars =
           await carService.fetchCars(latitude, longitude);
@@ -25,7 +25,12 @@ class CarCubit extends Cubit<CarState> {
         return Marker(
           markerId: MarkerId(car.id.toString()),
           position: LatLng(car.latitude, car.longitude),
-          infoWindow: InfoWindow(title: car.carName),
+          infoWindow: InfoWindow(
+            title: car.carName,
+            onTap: () {
+              onTap(car);
+            },
+          ),
           icon: customMarker,
         );
       }).toSet();

@@ -6,6 +6,7 @@ import 'package:xride/cubit/auth/auth_cubit.dart';
 import 'package:xride/cubit/car/car_cubit.dart';
 import 'package:xride/cubit/location/location_cubit.dart';
 import 'package:xride/cubit/user/user_cubit.dart';
+import 'package:xride/data/cars/car_model.dart';
 import 'package:xride/data/user/user_model.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -33,6 +34,14 @@ class _HomeScreenState extends State<HomeScreen> {
     mapController = controller;
   }
 
+  void onTapCar(CarModel car) {
+    Navigator.pushNamed(
+      context,
+      AppRouter.carDetailsScreen,
+      arguments: car,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 context
                     .read<CarCubit>()
-                    .fetchCars(latitude.toString(), longitude.toString());
+                    .fetchCars(latitude.toString(), longitude.toString(), onTapCar);
               },
               icon: const Icon(Icons.refresh)),
           IconButton(
@@ -94,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
               } else if (state is LocationLoaded) {
                 context.read<CarCubit>().fetchCars(
                     state.locationData.latitude.toString(),
-                    state.locationData.longitude.toString());
+                    state.locationData.longitude.toString(), onTapCar);
               }
             },
           ),
@@ -172,11 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 subtitle: Text(
                                     '${car.year} - \$${car.bookingPrice12H}'),
                                 onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    '/carDetails', // Navigate to car details
-                                    arguments: car,
-                                  );
+                                  onTapCar(car);
                                 },
                               );
                             },

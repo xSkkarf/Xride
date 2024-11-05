@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:xride/cubit/car/car_cubit.dart';
 import 'package:xride/cubit/location/location_cubit.dart';
 import 'package:xride/cubit/payment/payment_cubit.dart';
+import 'package:xride/data/cars/car_model.dart';
+import 'package:xride/screens/car_details_screen.dart';
 import 'package:xride/screens/home_screen.dart';
 import 'package:xride/screens/login_screen.dart';
 import 'package:xride/screens/payment_screen.dart';
@@ -16,6 +18,7 @@ class AppRouter {
   static const String homeScreen = "/home_screen";
   static const String paymentScreen = "/payment_screen";
   static const String paymentWebScreen = "/payment_web_screen";
+  static const String carDetailsScreen = "/car_details_screen";
 
   Route? generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -32,6 +35,12 @@ class AppRouter {
                 create: (context) => CarCubit(CarService())),
             ], 
             child: const HomeScreen()),
+        );
+      case carDetailsScreen:
+        return MaterialPageRoute(
+          builder: (BuildContext context) => CarDetailsScreen(
+            car: settings.arguments as CarModel,
+          ),
         );
       case paymentScreen:
         return MaterialPageRoute(
