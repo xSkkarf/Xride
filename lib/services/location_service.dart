@@ -1,9 +1,9 @@
 import 'package:location/location.dart';
 
-class HomeService {
+class LocationService {
   final Location location = Location();
 
-  // HomeService() {
+  // LocationService() {
   //   // Set the desired interval for location updates (in milliseconds)
   //   location.changeSettings(
   //     interval: 5000, // 5 seconds

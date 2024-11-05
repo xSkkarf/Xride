@@ -4,7 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:xride/app_router.dart';
 import 'package:xride/cubit/auth/auth_cubit.dart';
 import 'package:xride/cubit/car/car_cubit.dart';
-import 'package:xride/cubit/home/home_cubit.dart';
+import 'package:xride/cubit/location/location_cubit.dart';
 import 'package:xride/cubit/user/user_cubit.dart';
 import 'package:xride/data/user/user_model.dart';
 
@@ -25,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<HomeCubit>().fetchInitialLocation();
+    context.read<LocationCubit>().fetchInitialLocation();
     context.read<UserCubit>().fetchUserInfo();
   }
 
@@ -86,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             },
           ),
-          BlocListener<HomeCubit, HomeState>(
+          BlocListener<LocationCubit, LocationState>(
             listener: (context, state) {
               if (state is LocationError) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -98,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
         ],
-        child: BlocBuilder<HomeCubit, HomeState>(
+        child: BlocBuilder<LocationCubit, LocationState>(
           builder: (context, state) {
             if (state is LocationLoading) {
               return const Center(child: CircularProgressIndicator());

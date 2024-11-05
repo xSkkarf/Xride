@@ -1,12 +1,12 @@
-part of 'home_cubit.dart';
+part of 'location_cubit.dart';
 
 @immutable
-sealed class HomeState {}
+sealed class LocationState {}
 
 
-class LocationLoading extends HomeState {}
+class LocationLoading extends LocationState {}
 
-class LocationLoaded extends HomeState {
+class LocationLoaded extends LocationState {
   final LocationData locationData;
   final CameraPosition initialPosition;
   final Marker currentLocationMarker;
@@ -18,7 +18,7 @@ class LocationLoaded extends HomeState {
   });
 }
 
-class LocationError extends HomeState {
+class LocationError extends LocationState {
   final String error;
   LocationError(this.error);
 }

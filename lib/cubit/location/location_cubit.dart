@@ -2,18 +2,18 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
-import 'package:xride/services/home_service.dart';
-part 'home_state.dart';
+import 'package:xride/services/location_service.dart';
+part 'location_state.dart';
 
-class HomeCubit extends Cubit<HomeState> {
-  final HomeService homeService;
+class LocationCubit extends Cubit<LocationState> {
+  final LocationService locationService;
 
-  HomeCubit(this.homeService) : super(LocationLoading());
+  LocationCubit(this.locationService) : super(LocationLoading());
 
   void fetchInitialLocation() async {
     emit(LocationLoading());
     try {
-      final locationData = await homeService.getInitialLocation();
+      final locationData = await locationService.getInitialLocation();
       if (locationData == null) {
         emit(LocationError('Failed to get location data.'));
         return;
@@ -41,7 +41,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   void trackLocationUpdates() {
     try {
-      final locationStream = homeService.getLocationStream();
+      final locationStream = locationService.getLocationStream();
       locationStream.listen((locationData) {
         final currentLatLng =
             LatLng(locationData.latitude!, locationData.longitude!);

@@ -6,6 +6,7 @@ class PaymentService{
 
   Future<String> getPaymentKey(int amount,String currency)async{
     try {
+      SharedPreferences prefs= await SharedPreferences.getInstance();
       String authanticationToken= await getAuthenticationToken();
 
       int orderId= await getOrderId(
@@ -14,26 +15,26 @@ class PaymentService{
         currency: currency,
       );
 
-      String userId = getUserId().toString();
-      String accessToken = getAccessToken().toString(); 
-
-
-      String paymentKey= await getPaymentToken(
-        authanticationToken: authanticationToken,
-        amount: (100*amount).toString(),
-        currency: currency,
-        orderId: orderId.toString(),
-        userId: userId,
-      );
+      int userId = getUserId(prefs);
+      String accessToken = getAccessToken(prefs); 
 
       // try{
-      //   Future<int> statusCode = initializePayment(userId, orderId, amount, currency, authanticationToken, accessToken);
+      //   Future<int> statusCode = initializePayment(orderId, amount, accessToken);
       //   if(statusCode != Future.value(200)){
       //     throw Exception();
       //   }
       // } catch(e){
       //   throw Exception();
       // }
+
+      String paymentKey= await getPaymentToken(
+        authanticationToken: authanticationToken,
+        amount: (100*amount).toString(),
+        currency: currency,
+        orderId: orderId.toString(),
+        userId: userId.toString(),
+      );
+
       
       return paymentKey;
     } catch (e) {
@@ -51,17 +52,13 @@ class PaymentService{
     return response.data["token"];
   }
 
-  Future<String> getAccessToken()async{
-    SharedPreferences prefs= await SharedPreferences.getInstance();
+  String getAccessToken(SharedPreferences prefs){
     return prefs.getString("accessToken")!;
   }
 
   Future<int> initializePayment(
-    String userId,
     int orderId,
     int amount,
-    String currency,
-    String authanticationToken,
     String accessToken
     )async{
     try {
@@ -69,11 +66,8 @@ class PaymentService{
         "${XConstants.baseUrl}/${XConstants.backendVersion}/user/payments/create/",
         options: Options(headers: {'Authorization': 'JWT $accessToken'}),
         data: {
-          "auth_token": authanticationToken,
-          "amount": amount.toString(),
-          "currency": currency,
+          "amount": amount,
           "order_id": orderId,
-          "user_id": userId,
         },
       );
       return response.statusCode ?? 404;
@@ -91,8 +85,7 @@ class PaymentService{
     }
   }
 
-  Future<int>getUserId()async{
-    SharedPreferences prefs= await SharedPreferences.getInstance();
+  int getUserId(SharedPreferences prefs){
     return prefs.getInt("id")!;
   }
 
