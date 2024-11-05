@@ -74,9 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(state.error),
                 ));
-              } else if (state is CarsLoaded){
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+              } else if (state is CarsLoaded) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text("Cars loaded successfully"),
                 ));
 
@@ -92,34 +91,113 @@ class _HomeScreenState extends State<HomeScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(state.error),
                 ));
-              } else if (state is LocationLoaded){
-                context.read<CarCubit>().fetchCars(state.locationData.latitude.toString(), state.locationData.longitude.toString());
+              } else if (state is LocationLoaded) {
+                context.read<CarCubit>().fetchCars(
+                    state.locationData.latitude.toString(),
+                    state.locationData.longitude.toString());
               }
             },
           ),
         ],
-        child: BlocBuilder<LocationCubit, LocationState>(
-          builder: (context, state) {
-            if (state is LocationLoading) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state is LocationLoaded) {
-              latitude = state.locationData.latitude!;
-              longitude = state.locationData.longitude!;
-              return GoogleMap(
-                onMapCreated: onMapCreated,
-                markers: allMarkers,
-                initialCameraPosition: state.initialPosition,
-                myLocationEnabled: true,
-                myLocationButtonEnabled: true,
-              );
-            } else if (state is LocationError) {
-              return Center(
-                child: Text('Error: //${state.error}'),
-              );
-            } else {
-              return const Center(child: CircularProgressIndicator());
-            }
-          },
+        child: Stack(
+          children: [
+            BlocBuilder<LocationCubit, LocationState>(
+              builder: (context, state) {
+                if (state is LocationLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state is LocationLoaded) {
+                  latitude = state.locationData.latitude!;
+                  longitude = state.locationData.longitude!;
+                  return GoogleMap(
+                    onMapCreated: onMapCreated,
+                    markers: allMarkers,
+                    initialCameraPosition: state.initialPosition,
+                    myLocationEnabled: true,
+                    myLocationButtonEnabled: true,
+                  );
+                } else if (state is LocationError) {
+                  return Center(
+                    child: Text('Error: //${state.error}'),
+                  );
+                } else {
+                  return const Center(child: CircularProgressIndicator());
+                }
+              },
+            ),
+            BlocBuilder<CarCubit, CarState>(
+              builder: (context, state) {
+                if (state is CarsLoaded) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: DraggableScrollableSheet(
+                      initialChildSize: 0.2, // Default height of the sheet
+                      minChildSize: 0.1, // Minimum height (collapsed)
+                      maxChildSize: 0.6, // Maximum height (expanded)
+                      builder: (context, scrollController) {
+                        return Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(16)),
+                            boxShadow: [
+                              // Adds a shadow for better UI
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 8.0,
+                              ),
+                            ],
+                          ),
+                          child: BlocBuilder<CarCubit, CarState>(
+                            builder: (context, state) {
+                              if (state is CarsLoading) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              } else if (state is CarsLoaded) {
+                                allMarkers =
+                                    state.carMarkers; // Update map markers
+                                return ListView.builder(
+                                  controller:
+                                      scrollController, // Enables scrolling in sheet
+                                  itemCount: state.cars.length,
+                                  itemBuilder: (context, index) {
+                                    final car = state.cars[index];
+                                    return ListTile(
+                                      leading: const Icon(
+                                        Icons.directions_car,
+                                        color: Colors.blue,
+                                      ),
+                                      title: Text(car.carName),
+                                      subtitle: Text(
+                                          '${car.year} - \$${car.bookingPrice12H}'),
+                                      onTap: () {
+                                        Navigator.pushNamed(
+                                          context,
+                                          '/carDetails', // Navigate to car details
+                                          arguments: car,
+                                        );
+                                      },
+                                    );
+                                  },
+                                );
+                              } else if (state is CarsError) {
+                                return const Center(
+                                    child: Text('Failed to load cars'));
+                              } else {
+                                return const Center(
+                                    child: Text('No cars available.'));
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                } else {
+                  return const SizedBox.shrink();
+                }
+              },
+            ),
+          ],
         ),
       ),
     );

@@ -31,6 +31,7 @@ class CarCubit extends Cubit<CarState> {
       }).toSet();
 
       emit(CarsLoaded(
+        cars: cars,
         carMarkers: carMarkers,
       ));
       

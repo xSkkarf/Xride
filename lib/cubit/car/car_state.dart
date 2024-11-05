@@ -9,7 +9,8 @@ class CarsLoading extends CarState {}
 
 class CarsLoaded extends CarState {
   final Set<Marker> carMarkers;
-  CarsLoaded({required this.carMarkers});
+  final List<CarModel> cars;
+  CarsLoaded({required this.carMarkers, required this.cars});
 }
 
 class CarsError extends CarState {
