@@ -9,32 +9,36 @@ class PaymentService{
       SharedPreferences prefs= await SharedPreferences.getInstance();
       String authanticationToken= await getAuthenticationToken();
 
+      print("authanticationToken: $authanticationToken");
+
       int orderId= await getOrderId(
         authanticationToken: authanticationToken, 
         amount: (100*amount).toString(), 
         currency: currency,
       );
 
-      int userId = getUserId(prefs);
       String accessToken = getAccessToken(prefs); 
 
-      // try{
-      //   Future<int> statusCode = initializePayment(orderId, amount, accessToken);
-      //   if(statusCode != Future.value(200)){
-      //     throw Exception();
-      //   }
-      // } catch(e){
-      //   throw Exception();
-      // }
 
       String paymentKey= await getPaymentToken(
         authanticationToken: authanticationToken,
         amount: (100*amount).toString(),
         currency: currency,
         orderId: orderId.toString(),
-        userId: userId.toString(),
       );
 
+      print("BEFORE INITIALIZING PAYMENT");
+      try{
+        int statusCode = await initializePayment(authanticationToken, amount, accessToken);
+        print("statusCode: $statusCode");
+        if(statusCode != 201){
+          print("Failed to initialize payment");
+          throw Exception();
+        }
+      } catch(e){
+        print("Failed to initialize payment: $e");
+        throw Exception("Failed to initialize payment: $e");
+      }
       
       return paymentKey;
     } catch (e) {
@@ -57,36 +61,20 @@ class PaymentService{
   }
 
   Future<int> initializePayment(
-    int orderId,
+    String authanticationToken,
     int amount,
     String accessToken
     )async{
-    try {
       final Response response = await Dio().post(
         "${XConstants.baseUrl}/${XConstants.backendVersion}/user/payments/create/",
         options: Options(headers: {'Authorization': 'JWT $accessToken'}),
         data: {
           "amount": amount,
-          "order_id": orderId,
+          "order_id": authanticationToken,
         },
       );
       return response.statusCode ?? 404;
-    } catch (e) {
-      if (e is DioException) {
-        // Handle DioException specifically
-        print('DioException: ${e.message}');
-        print('Response data: ${e.response?.data}');
-        print('Status code: ${e.response?.statusCode}');
-      } else {
-        // Handle other exceptions
-        print('Exception: $e');
-      }
-      return 404;
-    }
-  }
-
-  int getUserId(SharedPreferences prefs){
-    return prefs.getInt("id")!;
+    
   }
 
   Future<int>getOrderId({
@@ -112,7 +100,6 @@ class PaymentService{
     required String orderId,
     required String amount,
     required String currency,
-    required String userId
   }) async{
     final Response response=await Dio().post(
       "https://accept.paymob.com/api/acceptance/payment_keys",
@@ -121,8 +108,7 @@ class PaymentService{
         "expiration": 3600,
 
         "auth_token": authanticationToken,//From First Api
-        "user_id": userId,
-        "order_id":orderId,//From Second Api  >>(STRING)<<
+        "order_id":orderId, //From Second Api  >>(STRING)<<
         "integration_id": XConstants.payMobIntegrationId,//Integration Id Of The Payment Method
         
         "amount_cents": amount, 
@@ -141,7 +127,7 @@ class PaymentService{
           "street": "NA", 
           "building": "NA", 
           "shipping_method": "NA", 
-          "postal_code": "NA", 
+          "postal_code": authanticationToken, 
           "city": "NA", 
           "country": "NA", 
           "state": "NA"

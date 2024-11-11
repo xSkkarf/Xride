@@ -66,6 +66,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Payment Successful')),
               );
+              context.read<UserCubit>().fetchUserInfo();
             }
           },
           child: BlocBuilder<PaymentCubit, PaymentState>(
@@ -78,15 +79,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         children: [
                       BlocBuilder<UserCubit, UserState>(
                         builder: (context, state) {
-                          return Text(
-                            (state is UserFetchSuccess)
-                                ? 'Wallet Balance: \$${state.user.walletBalance}'
-                                : 'Wallet Balance: loading',
-                            style: const TextStyle(
+                          if (state is UserFetchFail) {
+                            return Text('Failed to fetch user data: ${state.error}');
+                          }
+                          else if (state is UserFetchSuccess) {
+                            return Text(
+                              'Wallet Balance: \$${state.user.walletBalance}',
+                              style: const TextStyle(
                                 fontSize: 18, fontWeight: FontWeight.bold),
-                          );
+                            );
+                          }
+                          return const CircularProgressIndicator();
                         },
                       ),
+                      const SizedBox(height: 20),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: TextField(
