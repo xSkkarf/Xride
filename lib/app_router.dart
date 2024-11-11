@@ -9,12 +9,14 @@ import 'package:xride/screens/home_screen.dart';
 import 'package:xride/screens/login_screen.dart';
 import 'package:xride/screens/payment_screen.dart';
 import 'package:xride/screens/payment_web_screen.dart';
+import 'package:xride/screens/signup_screen.dart';
 import 'package:xride/services/car_service.dart';
 import 'package:xride/services/location_service.dart';
 import 'package:xride/services/payment_service.dart';
 
 class AppRouter {
   static const String loginScreen = "/";
+  static const String signupScreen = "/signup_screen";
   static const String homeScreen = "/home_screen";
   static const String paymentScreen = "/payment_screen";
   static const String paymentWebScreen = "/payment_web_screen";
@@ -25,6 +27,9 @@ class AppRouter {
       case loginScreen:
         return MaterialPageRoute(
           builder: (BuildContext context) => const LogInScreen());
+      case signupScreen:
+        return MaterialPageRoute(
+          builder: (BuildContext context) => const SignupScreen());
       case homeScreen:
         return MaterialPageRoute(
           builder: (BuildContext context) => MultiBlocProvider(

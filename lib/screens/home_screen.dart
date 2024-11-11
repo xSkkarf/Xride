@@ -63,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      backgroundColor: const Color.fromARGB(255, 232, 233, 235),
       drawer: const UserDrawer(),
       body: MultiBlocListener(
         listeners: [
@@ -117,12 +118,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 } else if (state is LocationLoaded) {
                   latitude = state.locationData.latitude!;
                   longitude = state.locationData.longitude!;
-                  return GoogleMap(
-                    onMapCreated: onMapCreated,
-                    markers: allMarkers,
-                    initialCameraPosition: state.initialPosition,
-                    myLocationEnabled: true,
-                    myLocationButtonEnabled: true,
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 75.0),
+                    child: GoogleMap(
+                      onMapCreated: onMapCreated,
+                      markers: allMarkers,
+                      initialCameraPosition: state.initialPosition,
+                      myLocationEnabled: true,
+                      myLocationButtonEnabled: true,
+                    ),
                   );
                 } else if (state is LocationError) {
                   return Center(
@@ -139,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: DraggableScrollableSheet(
-                      initialChildSize: 0.2, // Default height of the sheet
+                      initialChildSize: 0.1, // Default height of the sheet
                       minChildSize: 0.1, // Minimum height (collapsed)
                       maxChildSize: 0.6, // Maximum height (expanded)
                       builder: (context, scrollController) {

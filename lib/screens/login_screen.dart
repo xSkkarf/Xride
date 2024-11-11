@@ -59,6 +59,21 @@ class _LogInScreenState extends State<LogInScreen> {
                     },
                     child: const Text('Login'),
                   )),
+                  const SizedBox(height: 15),
+                  const Text(
+                    "or",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, AppRouter.signupScreen);
+                    },
+                    child: const Text('Create an account'),
+                  ),
                 ],
               ),
             );
