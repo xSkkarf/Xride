@@ -133,4 +133,46 @@ class AuthService {
 
     return false;
   }
+
+  
+
+  Future<void> signup(
+    String username,
+    String email, 
+    String firstName, 
+    String lastName, 
+    String phoneNumber,
+    String address,
+    String nationalId,
+    String password,
+    String rePassword) async {
+
+      try{
+        final response = await dio.post('$baseUrl/auth/users/', data: {
+          'username': username,
+          'email': email,
+          'first_name': firstName,
+          'last_name': lastName,
+          'phone_number': phoneNumber,
+          'address': address,
+          'national_id': nationalId,
+          'password': password,
+          're_password': rePassword,
+        });
+      
+
+        if (response.statusCode == 201) {
+          print('User created successfully');
+        } else {
+          throw Exception('Signup failed');
+        }
+
+      } on DioException catch (e) {
+        if (e.response!.statusCode == 400) {
+          throw Exception(e.response!.data);
+        } else {
+          throw Exception('Signup failed');
+        }
+      }
+  }
 }

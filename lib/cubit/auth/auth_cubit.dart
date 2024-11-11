@@ -48,4 +48,35 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthFailure(e.toString()));
     }
   }
+
+  Future<void> signup(
+    String username,
+    String email, 
+    String firstName, 
+    String lastName, 
+    String phoneNumber,
+    String address,
+    String nationalId,
+    String password,
+    String rePassword
+    ) async {
+      
+    try {
+      emit(AuthCreateLoading());
+      await authService.signup(
+        username,
+        email,
+        firstName,
+        lastName,
+        phoneNumber,
+        address,
+        nationalId,
+        password,
+        rePassword
+      );
+      emit(AuthCreateSuccess());
+    } catch (e) {
+      emit(AuthCreateFailure(e.toString()));
+    }
+  }
 }

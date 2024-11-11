@@ -12,6 +12,14 @@ class AuthFailure extends AuthState {
   AuthFailure(this.error);
 }
 
+class AuthCreateLoading extends AuthState {}
+class AuthCreateFailure extends AuthState {
+  final String error;
+
+  AuthCreateFailure(this.error);
+}
+class AuthCreateSuccess extends AuthState {}
+
 final class UserLoggedOut extends AuthState {}
 
 final class UserLoggedIn extends AuthState {}
