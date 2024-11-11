@@ -150,6 +150,8 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                     target: LatLng(widget.car.latitude, widget.car.longitude),
                     zoom: 14,
                   ),
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
                   markers: {
                     Marker(
                       markerId: MarkerId(widget.car.id.toString()),
@@ -170,59 +172,59 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
               ),
               elevation: 2,
               shadowColor: Colors.black,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Select Booking Duration',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    buildPriceOption('2 Hours', widget.car.bookingPrice2H),
-                    buildPriceOption('6 Hours', widget.car.bookingPrice6H),
-                    buildPriceOption('12 Hours', widget.car.bookingPrice12H),
-                    const SizedBox(height: 20),
-                    // Reserve Button
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: BlocBuilder<UserCubit, UserState>(
+                builder: (context, state) {
+                  double wallet_balance = (state as UserFetchSuccess).user.walletBalance;
+                  return Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        BlocBuilder<UserCubit, UserState>(
-                          builder: (context, state){
-                            // Show the user balance
-                            return Text('Balance: \$${(state as UserFetchSuccess).user.walletBalance}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
+                        const Text(
+                          'Select Booking Duration',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        buildPriceOption('2 Hours', widget.car.bookingPrice2H, wallet_balance),
+                        buildPriceOption('6 Hours', widget.car.bookingPrice6H, wallet_balance),
+                        buildPriceOption('12 Hours', widget.car.bookingPrice12H, wallet_balance),
+                        const SizedBox(height: 20),
+                        // Reserve Button
+                        Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Balance: \$$wallet_balance',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                ),
                               ),
-                            );
-                            
-                          }
-
-                        ),
-                        ElevatedButton(
-                          onPressed: selectedPriceOption != null
-                              ? () {
-                                  // Handle reservation logic here
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          'Reserved for $selectedPriceOption'),
-                                    ),
-                                  );
-                                }
-                              : null,
-                          child: const Text('Reserve',
-                              style: TextStyle(fontSize: 15)),
-                        ),
-                    ]),
-                  ],
-                ),
+                              ElevatedButton(
+                                onPressed: selectedPriceOption != null
+                                    ? () {
+                                        // Handle reservation logic here
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                                'Reserved for $selectedPriceOption'),
+                                          ),
+                                        );
+                                      }
+                                    : null,
+                                child: const Text('Reserve',
+                                    style: TextStyle(fontSize: 15)),
+                              ),
+                            ]),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -232,19 +234,36 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
   }
 
   // Helper method to create a selectable price option
-  Widget buildPriceOption(String title, String price) {
+  Widget buildPriceOption(String title, String price, double walletBalance) {
     return RadioListTile<String>(
       value: title,
       groupValue: selectedPriceOption,
       onChanged: (value) {
-        setState(() {
-          selectedPriceOption = value;
-        });
+        if (walletBalance >= double.parse(price)) {
+          setState(() {
+            selectedPriceOption = value;
+          });
+        } else{
+          const snackBar = SnackBar(
+            content: Text('Insufficient balance'),
+            duration: Duration(seconds: 1),
+          );
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        }
       },
-      title: Text(title, style: const TextStyle(fontSize: 16)),
-      subtitle: Text('\$$price',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+      title: Text(title, style: TextStyle(fontSize: 16, color: (walletBalance >= double.parse(price)) ? Colors.black : Colors.grey)),
+      subtitle: Text(
+        '\$$price',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: (walletBalance >= double.parse(price)) ? Colors.black87 : Colors.grey,
+        ),
+      ),
       activeColor: Colors.blue,
+      controlAffinity: ListTileControlAffinity.trailing,
+      toggleable: true,
     );
   }
 }
