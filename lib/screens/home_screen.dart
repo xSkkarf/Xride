@@ -53,6 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 context
                     .read<CarCubit>()
                     .fetchCars(latitude.toString(), longitude.toString(), onTapCar);
+                    
+                context.read<UserCubit>().fetchUserInfo();
               },
               icon: const Icon(Icons.refresh)),
           IconButton(
