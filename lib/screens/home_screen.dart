@@ -177,9 +177,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Icons.directions_car,
                                   color: Colors.blue,
                                 ),
-                                title: Text(car.carName),
+                                title: Text(car.carModel),
                                 subtitle: Text(
-                                    '${car.year} - \$${car.bookingPrice12H}'),
+                                    '\$${car.bookingPrice12H}'),
                                 onTap: () {
                                   onTapCar(car);
                                 },

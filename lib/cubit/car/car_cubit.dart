@@ -26,7 +26,7 @@ class CarCubit extends Cubit<CarState> {
           markerId: MarkerId(car.id.toString()),
           position: LatLng(car.latitude, car.longitude),
           infoWindow: InfoWindow(
-            title: car.carName,
+            title: car.carModel,
             onTap: () {
               onTap(car);
             },

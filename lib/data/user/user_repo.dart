@@ -35,7 +35,6 @@ class UserRepo {
 
   void saveUser(UserModel user) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setInt('id', user.id);
     prefs.setString('username', user.username);
     prefs.setString('email', user.email);
     prefs.setString('firstName', user.firstName);

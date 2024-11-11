@@ -1,8 +1,7 @@
 class CarModel {
   final int id;
-  final String carName;
+  final String carModel;
   final String carPlate;
-  final int year;
   final String doorStatus;
   final double temperature;
   final double latitude;
@@ -11,12 +10,12 @@ class CarModel {
   final String bookingPrice2H;
   final String bookingPrice6H;
   final String bookingPrice12H;
+  final String region;
 
   CarModel({
     required this.id,
-    required this.carName,
+    required this.carModel,
     required this.carPlate,
-    required this.year,
     required this.doorStatus,
     required this.temperature,
     required this.latitude,
@@ -25,14 +24,15 @@ class CarModel {
     required this.bookingPrice2H,
     required this.bookingPrice6H,
     required this.bookingPrice12H,
+    required this.region
   });
 
   factory CarModel.fromJson(Map<String, dynamic> json) {
     return CarModel(
       id: json['id'] as int,
-      carName: json['car_name'] ?? '',
+      region: json['location'] ?? '',
+      carModel: json['car_model'] ?? '',
       carPlate: json['car_plate'] ?? '',
-      year: json['year'] as int,
       doorStatus: json['door_status'] ?? '',
       temperature: json['temperature'] ?? 0.0,
       latitude: json['location_latitude'] ?? 0.0,
@@ -47,9 +47,8 @@ class CarModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'car_name': carName,
+      'car_name': carModel,
       'car_plate': carPlate,
-      'year': year,
       'door_status': doorStatus,
       'temperature': temperature,
       'location_latitude': latitude,

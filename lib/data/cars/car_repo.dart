@@ -29,7 +29,7 @@ class CarRepo {
         return car;
       } else {
         print('Failed to fetch nearby cars not 200');
-        throw Exception('Failed to fetch nearby cars');
+        throw Exception('Failed to fetch nearby cars not 200');
       }
     } catch (e) {
       print('Failed to fetch nearby cars: $e');

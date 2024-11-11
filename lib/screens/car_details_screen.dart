@@ -20,7 +20,7 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.car.carName),
+        title: Text(widget.car.carModel),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -48,7 +48,7 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      widget.car.carName,
+                      widget.car.carModel,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -56,7 +56,7 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                       ),
                     ),
                     Text(
-                      'Year: ${widget.car.year}, Plate: ${widget.car.carPlate}',
+                      'Plate: ${widget.car.carPlate}',
                       style: TextStyle(color: Colors.grey[700]),
                     ),
                     const SizedBox(height: 20),
@@ -155,7 +155,7 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                       markerId: MarkerId(widget.car.id.toString()),
                       position:
                           LatLng(widget.car.latitude, widget.car.longitude),
-                      infoWindow: InfoWindow(title: widget.car.carName),
+                      infoWindow: InfoWindow(title: widget.car.carModel),
                     ),
                   },
                 ),
