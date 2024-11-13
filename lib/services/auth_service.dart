@@ -8,24 +8,32 @@ class AuthService {
   final String baseUrl = XConstants.baseUrl;
 
   Future<String> login(String username, String password) async {
-    final response = await dio.post('$baseUrl/token/', data: {
-      'username': username,
-      'password': password,
-    });
+    try{
+      final response = await dio.post('$baseUrl/auth/jwt/create/', data: {
+        'username': username,
+        'password': password,
+      });
 
-    if (response.statusCode == 200) {
-      final String accessToken = response.data['access'];
-      final String refreshToken = response.data['refresh'];
-      final prefs = await SharedPreferences.getInstance();
+      if (response.statusCode == 200) {
+        final String accessToken = response.data['access'];
+        final String refreshToken = response.data['refresh'];
+        final prefs = await SharedPreferences.getInstance();
 
-      // Save access and refresh tokens
-      await prefs.setString('accessToken', accessToken);
-      await prefs.setString('refreshToken', refreshToken);
+        // Save access and refresh tokens
+        await prefs.setString('accessToken', accessToken);
+        await prefs.setString('refreshToken', refreshToken);
 
-      // Return the access token for further use
-      return accessToken;
-    } else {
-      throw Exception('Login failed');
+        // Return the access token for further use
+        return accessToken;
+      } else {
+        throw Exception('Login failed');
+      }
+    } on DioException catch (e) {
+      if (e.response!.statusCode == 401) {
+        throw Exception(e.response!.data);
+      } else {
+        throw Exception('Login failed');
+      }
     }
   }
 
@@ -63,7 +71,7 @@ class AuthService {
   Future<bool> attemptTokenRefresh(String refreshToken, SharedPreferences prefs) async {
     try {
       print('Attempting to refresh token...');
-      final response = await dio.post('$baseUrl/token/refresh/', data: {
+      final response = await dio.post('$baseUrl/auth/jwt/refresh/', data: {
         'refresh': refreshToken,
       });
 

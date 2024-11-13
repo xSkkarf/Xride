@@ -29,7 +29,7 @@ class _LogInScreenState extends State<LogInScreen> {
             Navigator.pushReplacementNamed(context, AppRouter.homeScreen);
           } else if (state is AuthFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Failed to log in")),
+              SnackBar(content: Text(state.error)),
             );
           }
         },
