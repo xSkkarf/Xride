@@ -3,9 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:xride/app_router.dart';
 import 'package:xride/cubit/auth/auth_cubit.dart';
+import 'package:xride/cubit/reservation/reservation_cubit.dart';
 import 'package:xride/cubit/user/user_cubit.dart';
 import 'package:xride/data/user/user_repo.dart';
 import 'package:xride/services/auth_service.dart';
+import 'package:xride/services/reservation_service.dart';
 
 Future<void> main() async {
   await dotenv.load();
@@ -17,6 +19,7 @@ Future<void> main() async {
       BlocProvider<UserCubit>(
         create: (context) => UserCubit(UserRepo()),
       ),
+      BlocProvider(create: (context) => ReservationCubit(ReservationService()))
     ], child: const MyApp()),
   );
 }

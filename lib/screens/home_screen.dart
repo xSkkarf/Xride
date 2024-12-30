@@ -5,6 +5,7 @@ import 'package:xride/app_router.dart';
 import 'package:xride/cubit/auth/auth_cubit.dart';
 import 'package:xride/cubit/car/car_cubit.dart';
 import 'package:xride/cubit/location/location_cubit.dart';
+import 'package:xride/cubit/reservation/reservation_cubit.dart';
 import 'package:xride/cubit/user/user_cubit.dart';
 import 'package:xride/data/cars/car_model.dart';
 import 'package:xride/data/user/user_model.dart';
@@ -38,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.pushNamed(
       context,
       AppRouter.carDetailsScreen,
-      arguments: car,
+      arguments: ReservationArgs(car, latitude.toString(), longitude.toString()),
     );
   }
 

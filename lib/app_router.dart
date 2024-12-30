@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:xride/cubit/car/car_cubit.dart';
 import 'package:xride/cubit/location/location_cubit.dart';
 import 'package:xride/cubit/payment/payment_cubit.dart';
-import 'package:xride/data/cars/car_model.dart';
+import 'package:xride/cubit/reservation/reservation_cubit.dart';
 import 'package:xride/screens/car_details_screen.dart';
 import 'package:xride/screens/home_screen.dart';
 import 'package:xride/screens/login_screen.dart';
@@ -26,25 +26,22 @@ class AppRouter {
     switch (settings.name) {
       case loginScreen:
         return MaterialPageRoute(
-          builder: (BuildContext context) => const LogInScreen());
+            builder: (BuildContext context) => const LogInScreen());
       case signupScreen:
         return MaterialPageRoute(
-          builder: (BuildContext context) => const SignupScreen());
+            builder: (BuildContext context) => const SignupScreen());
       case homeScreen:
         return MaterialPageRoute(
-          builder: (BuildContext context) => MultiBlocProvider(
-            providers: [
-              BlocProvider<LocationCubit>(
+          builder: (BuildContext context) => MultiBlocProvider(providers: [
+            BlocProvider<LocationCubit>(
                 create: (context) => LocationCubit(LocationService())),
-              BlocProvider<CarCubit>(
-                create: (context) => CarCubit(CarService())),
-            ], 
-            child: const HomeScreen()),
+            BlocProvider<CarCubit>(create: (context) => CarCubit(CarService())),
+          ], child: const HomeScreen()),
         );
       case carDetailsScreen:
         return MaterialPageRoute(
           builder: (BuildContext context) => CarDetailsScreen(
-            car: settings.arguments as CarModel,
+            reservationArgs: settings.arguments as ReservationArgs,
           ),
         );
       case paymentScreen:

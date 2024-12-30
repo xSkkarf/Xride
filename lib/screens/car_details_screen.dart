@@ -1,26 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:xride/cubit/reservation/reservation_cubit.dart';
 import 'package:xride/cubit/user/user_cubit.dart';
-import 'package:xride/data/cars/car_model.dart';
 
 class CarDetailsScreen extends StatefulWidget {
-  final CarModel car;
+  final ReservationArgs reservationArgs;
 
-  const CarDetailsScreen({super.key, required this.car});
+  const CarDetailsScreen({super.key, required this.reservationArgs});
 
   @override
   State<CarDetailsScreen> createState() => _CarDetailsScreenState();
 }
 
 class _CarDetailsScreenState extends State<CarDetailsScreen> {
-  String? selectedPriceOption; // Holds the selected price option
+  String? selectedPriceOption;
+  Map<String, String> plans = {
+    '2 Hours': '2H',
+    '6 Hours': '6H',
+    '12 Hours': '12H',
+  };
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.car.carModel),
+        title: Text(widget.reservationArgs.car.carModel),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -48,7 +53,7 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      widget.car.carModel,
+                      widget.reservationArgs.car.carModel,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -56,7 +61,7 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                       ),
                     ),
                     Text(
-                      'Plate: ${widget.car.carPlate}',
+                      'Plate: ${widget.reservationArgs.car.carPlate}',
                       style: TextStyle(color: Colors.grey[700]),
                     ),
                     const SizedBox(height: 20),
@@ -74,7 +79,7 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                               ),
                             ),
                             Text(
-                              widget.car.doorStatus,
+                              widget.reservationArgs.car.doorStatus,
                               style: TextStyle(color: Colors.grey[700]),
                             ),
                           ],
@@ -94,7 +99,8 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                                 Icon(Icons.thermostat,
                                     size: 16, color: Colors.grey[700]),
                                 const SizedBox(width: 4),
-                                Text('${widget.car.temperature}°C'),
+                                Text(
+                                    '${widget.reservationArgs.car.temperature}°C'),
                               ],
                             ),
                           ],
@@ -110,7 +116,7 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                       ),
                     ),
                     Text(
-                      widget.car.reservationStatus,
+                      widget.reservationArgs.car.reservationStatus,
                       style: TextStyle(color: Colors.grey[700]),
                     ),
                   ],
@@ -147,17 +153,20 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                 borderRadius: BorderRadius.circular(10),
                 child: GoogleMap(
                   initialCameraPosition: CameraPosition(
-                    target: LatLng(widget.car.latitude, widget.car.longitude),
+                    target: LatLng(widget.reservationArgs.car.latitude,
+                        widget.reservationArgs.car.longitude),
                     zoom: 14,
                   ),
                   myLocationEnabled: true,
                   myLocationButtonEnabled: false,
                   markers: {
                     Marker(
-                      markerId: MarkerId(widget.car.id.toString()),
-                      position:
-                          LatLng(widget.car.latitude, widget.car.longitude),
-                      infoWindow: InfoWindow(title: widget.car.carModel),
+                      markerId:
+                          MarkerId(widget.reservationArgs.car.id.toString()),
+                      position: LatLng(widget.reservationArgs.car.latitude,
+                          widget.reservationArgs.car.longitude),
+                      infoWindow: InfoWindow(
+                          title: widget.reservationArgs.car.carModel),
                     ),
                   },
                 ),
@@ -174,7 +183,8 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
               shadowColor: Colors.black,
               child: BlocBuilder<UserCubit, UserState>(
                 builder: (context, state) {
-                  double wallet_balance = (state as UserFetchSuccess).user.walletBalance;
+                  double walletBalance =
+                      (state as UserFetchSuccess).user.walletBalance;
                   return Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -188,37 +198,75 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        buildPriceOption('2 Hours', widget.car.bookingPrice2H, wallet_balance),
-                        buildPriceOption('6 Hours', widget.car.bookingPrice6H, wallet_balance),
-                        buildPriceOption('12 Hours', widget.car.bookingPrice12H, wallet_balance),
+                        buildPriceOption(
+                            '2 Hours',
+                            widget.reservationArgs.car.bookingPrice2H,
+                            walletBalance),
+                        buildPriceOption(
+                            '6 Hours',
+                            widget.reservationArgs.car.bookingPrice6H,
+                            walletBalance),
+                        buildPriceOption(
+                            '12 Hours',
+                            widget.reservationArgs.car.bookingPrice12H,
+                            walletBalance),
                         const SizedBox(height: 20),
                         // Reserve Button
                         Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Balance: \$$wallet_balance',
+                                'Balance: \$$walletBalance',
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.black87,
                                 ),
                               ),
-                              ElevatedButton(
-                                onPressed: selectedPriceOption != null
-                                    ? () {
-                                        // Handle reservation logic here
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                                'Reserved for $selectedPriceOption'),
-                                          ),
-                                        );
-                                      }
-                                    : null,
-                                child: const Text('Reserve',
-                                    style: TextStyle(fontSize: 15)),
+                              BlocListener<ReservationCubit, ReservationState>(
+                                listener: (context, state) {
+                                  if (state is ReservationSuccess) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                            'Reserved for $selectedPriceOption'),
+                                      ),
+                                    );
+                                  } else if (state is ReservationError) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(state.message),
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: BlocBuilder<ReservationCubit,
+                                    ReservationState>(
+                                  builder: (context, state) {
+                                    if (state is ReservationLoading) {
+                                      return const CircularProgressIndicator();
+                                    } else {
+                                      return ElevatedButton(
+                                        onPressed: selectedPriceOption != null
+                                            ? () {
+                                                context
+                                                    .read<ReservationCubit>()
+                                                    .reserve(
+                                                        widget.reservationArgs
+                                                            .car.id,
+                                                        plans[selectedPriceOption!]!,
+                                                        widget.reservationArgs
+                                                            .latitude,
+                                                        widget.reservationArgs
+                                                            .longitude);
+                                              }
+                                            : null,
+                                        child: const Text('Reserve',
+                                            style: TextStyle(fontSize: 15)),
+                                      );
+                                    }
+                                  },
+                                ),
                               ),
                             ]),
                       ],
@@ -243,7 +291,7 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
           setState(() {
             selectedPriceOption = value;
           });
-        } else{
+        } else {
           const snackBar = SnackBar(
             content: Text('Insufficient balance'),
             duration: Duration(seconds: 1),
@@ -252,13 +300,20 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(snackBar);
         }
       },
-      title: Text(title, style: TextStyle(fontSize: 16, color: (walletBalance >= double.parse(price)) ? Colors.black : Colors.grey)),
+      title: Text(title,
+          style: TextStyle(
+              fontSize: 16,
+              color: (walletBalance >= double.parse(price))
+                  ? Colors.black
+                  : Colors.grey)),
       subtitle: Text(
         '\$$price',
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: (walletBalance >= double.parse(price)) ? Colors.black87 : Colors.grey,
+          color: (walletBalance >= double.parse(price))
+              ? Colors.black87
+              : Colors.grey,
         ),
       ),
       activeColor: Colors.blue,
