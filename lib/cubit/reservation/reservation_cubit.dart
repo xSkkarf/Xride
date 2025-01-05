@@ -9,8 +9,9 @@ class ReservationArgs{
   final CarModel car;
   final String latitude;
   final String longitude;
+  final Function carUpdateCallback;
 
-  ReservationArgs(this.car, this.latitude, this.longitude);
+  ReservationArgs(this.car, this.latitude, this.longitude, this.carUpdateCallback);
 }
 
 class ReservationCubit extends Cubit<ReservationState> {
@@ -18,7 +19,7 @@ class ReservationCubit extends Cubit<ReservationState> {
   ReservationCubit(this.reservationService) : super(ReservationInitial());
 
 
-  Future<bool> reserve(int carId, String plan, String latitude, String longitude) async {
+  Future<bool> reserve(int carId, String plan, String latitude, String longitude, Function carUpdateCallback) async {
     emit(ReservationLoading());
     final dynamic response;
     try {
@@ -28,6 +29,7 @@ class ReservationCubit extends Cubit<ReservationState> {
       return false;
     }
       emit(ReservationSuccess(response));
+      carUpdateCallback();
       return true;
   }
 
@@ -42,6 +44,15 @@ class ReservationCubit extends Cubit<ReservationState> {
       }
     } catch(e){
       emit(ReservationError(e.toString()));
+    }
+  }
+
+  Future<void> releaseCar(int carId) async {
+    try {
+      await reservationService.releaseCar(carId);
+      emit(ReservationInitial());
+    } catch(e){
+      null;
     }
   }
 }

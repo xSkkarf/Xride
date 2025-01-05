@@ -183,8 +183,10 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
               shadowColor: Colors.black,
               child: BlocBuilder<UserCubit, UserState>(
                 builder: (context, state) {
-                  double walletBalance =
-                      (state as UserFetchSuccess).user.walletBalance;
+                    double walletBalance = 0.0;
+                    if (state is UserFetchSuccess) {
+                      walletBalance = state.user.walletBalance;
+                    }
                   return Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -252,7 +254,8 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                                               widget.reservationArgs.car.id,
                                               plans[selectedPriceOption!]!,
                                               widget.reservationArgs.latitude,
-                                              widget.reservationArgs.longitude
+                                              widget.reservationArgs.longitude,
+                                              widget.reservationArgs.carUpdateCallback,
                                             );
                                             if (result) {Navigator.of(context).pop();};
                                           }: null,
