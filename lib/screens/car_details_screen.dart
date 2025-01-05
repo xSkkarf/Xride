@@ -247,20 +247,15 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                                       return const CircularProgressIndicator();
                                     } else {
                                       return ElevatedButton(
-                                        onPressed: selectedPriceOption != null
-                                            ? () {
-                                                context
-                                                    .read<ReservationCubit>()
-                                                    .reserve(
-                                                        widget.reservationArgs
-                                                            .car.id,
-                                                        plans[selectedPriceOption!]!,
-                                                        widget.reservationArgs
-                                                            .latitude,
-                                                        widget.reservationArgs
-                                                            .longitude);
-                                              }
-                                            : null,
+                                        onPressed: selectedPriceOption != null ? () async {
+                                            final result = await context.read<ReservationCubit>().reserve(
+                                              widget.reservationArgs.car.id,
+                                              plans[selectedPriceOption!]!,
+                                              widget.reservationArgs.latitude,
+                                              widget.reservationArgs.longitude
+                                            );
+                                            if (result) {Navigator.of(context).pop();};
+                                          }: null,
                                         child: const Text('Reserve',
                                             style: TextStyle(fontSize: 15)),
                                       );

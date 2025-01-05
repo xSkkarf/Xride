@@ -3,7 +3,38 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xride/constants/constants.dart';
 
 class ReservationService {
-  Future<void> reserveCar(int carId, String plan, String latitude, String longitude) async {
+
+  Future<dynamic> checkActiveReservation() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String accessToken = prefs.getString('accessToken')!;
+
+    try {
+      final Response response = await Dio().get(
+        "${XConstants.baseUrl}/${XConstants.backendVersion}/user/trips/active/",
+        options: Options(headers: {'Authorization': 'JWT $accessToken'}),
+      );
+
+      return response.data;
+
+    } on DioException catch (e) {
+      if (e.response != null) {
+        print('DioException: ${e.message}');
+        print('Status code: ${e.response?.statusCode}');
+        print('Response data: ${e.response?.data}');
+        throw Exception(e.response?.data['error']);
+      } else {
+        print('DioException: ${e.message}');
+      }
+      rethrow;
+    } catch (e) {
+      // Handle other exceptions
+      print('Exception: $e');
+      rethrow;
+    }
+
+  }
+
+  Future<dynamic> reserveCar(int carId, String plan, String latitude, String longitude) async {
     final prefs = await SharedPreferences.getInstance();
     final String accessToken = prefs.getString('accessToken')!;
 
@@ -23,6 +54,8 @@ class ReservationService {
       );
       // Handle the response if needed
       print('Reservation successful: ${response.data}');
+      return response.data;
+
     } on DioException catch (e) {
       if (e.response != null) {
         print('DioException: ${e.message}');

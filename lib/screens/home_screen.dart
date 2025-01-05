@@ -29,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     context.read<LocationCubit>().fetchInitialLocation();
     context.read<UserCubit>().fetchUserInfo();
+    context.read<ReservationCubit>().checkActiveReservation();
   }
 
   void onMapCreated(GoogleMapController controller) {
@@ -39,7 +40,8 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.pushNamed(
       context,
       AppRouter.carDetailsScreen,
-      arguments: ReservationArgs(car, latitude.toString(), longitude.toString()),
+      arguments:
+          ReservationArgs(car, latitude.toString(), longitude.toString()),
     );
   }
 
@@ -51,11 +53,11 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
               onPressed: () {
-                context
-                    .read<CarCubit>()
-                    .fetchCars(latitude.toString(), longitude.toString(), onTapCar);
-                    
+                context.read<CarCubit>().fetchCars(
+                    latitude.toString(), longitude.toString(), onTapCar);
+
                 context.read<UserCubit>().fetchUserInfo();
+                context.read<ReservationCubit>().checkActiveReservation();
               },
               icon: const Icon(Icons.refresh)),
           IconButton(
@@ -81,6 +83,19 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             },
           ),
+          BlocListener<UserCubit, UserState>(
+            listener: (context, state) {
+              if (state is UserFetchFail) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                ));
+              } else if (state is UserFetchSuccess) {
+                setState(() {
+                  user = state.user;
+                });
+              }
+            },
+          ),
           BlocListener<CarCubit, CarState>(
             listener: (context, state) {
               if (state is CarsError) {
@@ -88,10 +103,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   content: Text(state.error),
                 ));
               } else if (state is CarsLoaded) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text("Cars loaded successfully"),
-                ));
-
                 setState(() {
                   allMarkers = state.carMarkers;
                 });
@@ -107,102 +118,126 @@ class _HomeScreenState extends State<HomeScreen> {
               } else if (state is LocationLoaded) {
                 context.read<CarCubit>().fetchCars(
                     state.locationData.latitude.toString(),
-                    state.locationData.longitude.toString(), onTapCar);
+                    state.locationData.longitude.toString(),
+                    onTapCar);
               }
             },
           ),
         ],
-        child: Stack(
-          children: [
-            BlocBuilder<LocationCubit, LocationState>(
-              builder: (context, state) {
-                if (state is LocationLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (state is LocationLoaded) {
-                  latitude = state.locationData.latitude!;
-                  longitude = state.locationData.longitude!;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 75.0),
-                    child: GoogleMap(
-                      onMapCreated: onMapCreated,
-                      markers: allMarkers,
-                      initialCameraPosition: state.initialPosition,
-                      myLocationEnabled: true,
-                      myLocationButtonEnabled: true,
-                    ),
-                  );
-                } else if (state is LocationError) {
-                  return Center(
-                    child: Text('Error: //${state.error}'),
-                  );
-                } else {
-                  return const Center(child: CircularProgressIndicator());
-                }
-              },
-            ),
-            BlocBuilder<CarCubit, CarState>(
-              builder: (context, state) {
-                if (state is CarsLoaded) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: DraggableScrollableSheet(
-                      initialChildSize: 0.1, // Default height of the sheet
-                      minChildSize: 0.1, // Minimum height (collapsed)
-                      maxChildSize: 0.6, // Maximum height (expanded)
-                      builder: (context, scrollController) {
-                        return Container(
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            borderRadius:
-                                BorderRadius.vertical(top: Radius.circular(16)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 8.0,
-                              ),
-                            ],
+        child: BlocBuilder<ReservationCubit, ReservationState>(
+          builder: (context, state) {
+            if (state is ReservationSuccess) {
+
+              final response = state.response;
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('reservation id: ${response['reservation_id']}'),
+                    Text('car id: ${response['car_id']}'),
+                    Text('plan: ${response['reservation_plan']}'),
+                    Text('car model: ${response['car_model']}'),
+                    Text('car plate: ${response['car_plate']}'),
+                    Text('start time: ${response['start_time']}'),
+                    Text('end time: ${response['end_time']}'),
+                  ],
+                ),
+              );
+            } else {
+              return Stack(
+                children: [
+                  BlocBuilder<LocationCubit, LocationState>(
+                    builder: (context, state) {
+                      if (state is LocationLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (state is LocationLoaded) {
+                        latitude = state.locationData.latitude!;
+                        longitude = state.locationData.longitude!;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 75.0),
+                          child: GoogleMap(
+                            onMapCreated: onMapCreated,
+                            markers: allMarkers,
+                            initialCameraPosition: state.initialPosition,
+                            myLocationEnabled: true,
+                            myLocationButtonEnabled: true,
                           ),
-                          child: ListView.builder(
-                            controller:
-                                scrollController, // Enables scrolling in sheet
-                            itemCount: state.cars.length+1,
-                            itemBuilder: (context, index) {
-                              if (index == 0){
-                                return Container(
-                                    margin: const EdgeInsets.fromLTRB(100, 10, 100, 10),
-                                    height: 5,
-                                    width: 10,
-                                    decoration: BoxDecoration(
-                                        borderRadius:
-                                            BorderRadius.circular(10),
-                                        color: Colors.grey),
-                                  );
-                              }
-                              final car = state.cars[index-1];
-                              return ListTile(
-                                leading: const Icon(
-                                  Icons.directions_car,
-                                  color: Colors.blue,
+                        );
+                      } else if (state is LocationError) {
+                        return Center(
+                          child: Text('Error: //${state.error}'),
+                        );
+                      } else {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                    },
+                  ),
+                  BlocBuilder<CarCubit, CarState>(
+                    builder: (context, state) {
+                      if (state is CarsLoaded) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: DraggableScrollableSheet(
+                            initialChildSize: 0.1, // Default height of the sheet
+                            minChildSize: 0.1, // Minimum height (collapsed)
+                            maxChildSize: 0.6, // Maximum height (expanded)
+                            builder: (context, scrollController) {
+                              return Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(16)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black12,
+                                      blurRadius: 8.0,
+                                    ),
+                                  ],
                                 ),
-                                title: Text(car.carModel),
-                                subtitle: Text(
-                                    '\$${car.bookingPrice12H}'),
-                                onTap: () {
-                                  onTapCar(car);
-                                },
+                                child: ListView.builder(
+                                  controller:
+                                      scrollController, // Enables scrolling in sheet
+                                  itemCount: state.cars.length + 1,
+                                  itemBuilder: (context, index) {
+                                    if (index == 0) {
+                                      return Container(
+                                        margin: const EdgeInsets.fromLTRB(
+                                            100, 10, 100, 10),
+                                        height: 5,
+                                        width: 10,
+                                        decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            color: Colors.grey),
+                                      );
+                                    }
+                                    final car = state.cars[index - 1];
+                                    return ListTile(
+                                      leading: const Icon(
+                                        Icons.directions_car,
+                                        color: Colors.blue,
+                                      ),
+                                      title: Text(car.carModel),
+                                      subtitle: Text('\$${car.bookingPrice12H}'),
+                                      onTap: () {
+                                        onTapCar(car);
+                                      },
+                                    );
+                                  },
+                                ),
                               );
                             },
                           ),
                         );
-                      },
-                    ),
-                  );
-                } else {
-                  return const SizedBox.shrink();
-                }
-              },
-            ),
-          ],
+                      } else {
+                        return const SizedBox.shrink();
+                      }
+                    },
+                  ),
+                ],
+              );
+            }
+          },
         ),
       ),
     );

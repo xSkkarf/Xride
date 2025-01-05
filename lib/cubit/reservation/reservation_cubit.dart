@@ -18,14 +18,30 @@ class ReservationCubit extends Cubit<ReservationState> {
   ReservationCubit(this.reservationService) : super(ReservationInitial());
 
 
-  void reserve(int carId, String plan, String latitude, String longitude) async {
+  Future<bool> reserve(int carId, String plan, String latitude, String longitude) async {
     emit(ReservationLoading());
+    final dynamic response;
     try {
-      await reservationService.reserveCar(carId, plan, latitude, longitude);
+      response = await reservationService.reserveCar(carId, plan, latitude, longitude);
     } catch(e){
       emit(ReservationError(e.toString()));
-      return;
+      return false;
     }
-    emit(ReservationSuccess());
+      emit(ReservationSuccess(response));
+      return true;
+  }
+
+  void checkActiveReservation() async {
+    emit(ReservationLoading());
+    try {
+      final response = await reservationService.checkActiveReservation();
+      if(response['status'] == 'active'){
+        emit(ReservationSuccess(response));
+      } else {
+        emit(ReservationInitial());
+      }
+    } catch(e){
+      emit(ReservationError(e.toString()));
+    }
   }
 }
