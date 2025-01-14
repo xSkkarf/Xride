@@ -314,13 +314,14 @@ class UserDrawer extends StatelessWidget {
           child: ListView(
             padding: EdgeInsets.zero,
             children: <Widget>[
-              const DrawerHeader(
-                decoration: BoxDecoration(
+              DrawerHeader(
+                decoration: const BoxDecoration(
                   color: Colors.blue,
                 ),
                 child: Text(
+                  (state is UserFetchSuccess) ? state.user.username:
                   'User Info',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
                   ),
