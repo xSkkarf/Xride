@@ -5,9 +5,11 @@ import 'package:xride/app_router.dart';
 import 'package:xride/cubit/auth/auth_cubit.dart';
 import 'package:xride/cubit/car/car_cubit.dart';
 import 'package:xride/cubit/location/location_cubit.dart';
+import 'package:xride/cubit/parking/parking_cubit.dart';
 import 'package:xride/cubit/reservation/reservation_cubit.dart';
 import 'package:xride/cubit/user/user_cubit.dart';
 import 'package:xride/data/cars/car_model.dart';
+import 'package:xride/data/parkings/parking_model.dart';
 import 'package:xride/data/user/user_model.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -23,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   double latitude = 0.0;
   double longitude = 0.0;
   Set<Marker> allMarkers = {};
+  Set<Circle> allCircles = {};
 
   @override
   void initState() {
@@ -30,6 +33,23 @@ class _HomeScreenState extends State<HomeScreen> {
     context.read<LocationCubit>().fetchInitialLocation();
     context.read<UserCubit>().fetchUserInfo();
     context.read<ReservationCubit>().checkActiveReservation();
+    context.read<ParkingCubit>().fetchParkings();
+  }
+
+  void updateParkingMarkers(List<ParkingModel> parkings) {
+    setState(() {
+      allCircles.addAll(
+        parkings.map(
+          (parking) => Circle(
+            circleId: CircleId('parking_${parking.id}'),
+            center: LatLng(parking.latitude, parking.longitude),
+            radius: parking.radius*1000,
+            fillColor: Colors.blue.withOpacity(0.3),
+            strokeWidth: 0,
+          ),
+        ),
+      );
+    });
   }
 
   void onMapCreated(GoogleMapController controller) {
@@ -70,6 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 updateCars();
                 context.read<UserCubit>().fetchUserInfo();
                 context.read<ReservationCubit>().checkActiveReservation();
+                context.read<ParkingCubit>().fetchParkings();
               },
               icon: const Icon(Icons.refresh)),
           IconButton(
@@ -108,6 +129,17 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             },
           ),
+          BlocListener<ParkingCubit, ParkingState>(
+            listener: (context, state) {
+              if (state is ParkingError) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(state.error),
+                ));
+              } else if (state is ParkingLoaded) {
+                updateParkingMarkers(state.parkings);
+              }
+            },
+          ),
           BlocListener<CarCubit, CarState>(
             listener: (context, state) {
               if (state is CarsError) {
@@ -116,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ));
               } else if (state is CarsLoaded) {
                 setState(() {
-                  allMarkers = state.carMarkers;
+                  allMarkers.addAll(state.carMarkers);
                 });
               }
             },
@@ -152,6 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: GoogleMap(
                           onMapCreated: onMapCreated,
                           markers: allMarkers,
+                          circles: allCircles,
                           initialCameraPosition: state.initialPosition,
                           myLocationEnabled: true,
                           myLocationButtonEnabled: true,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:xride/cubit/car/car_cubit.dart';
 import 'package:xride/cubit/location/location_cubit.dart';
+import 'package:xride/cubit/parking/parking_cubit.dart';
 import 'package:xride/cubit/payment/payment_cubit.dart';
 import 'package:xride/cubit/reservation/reservation_cubit.dart';
 import 'package:xride/screens/car_details_screen.dart';
@@ -12,6 +13,7 @@ import 'package:xride/screens/payment_web_screen.dart';
 import 'package:xride/screens/signup_screen.dart';
 import 'package:xride/services/car_service.dart';
 import 'package:xride/services/location_service.dart';
+import 'package:xride/services/parking_service.dart';
 import 'package:xride/services/payment_service.dart';
 
 class AppRouter {
@@ -36,6 +38,8 @@ class AppRouter {
             BlocProvider<LocationCubit>(
                 create: (context) => LocationCubit(LocationService())),
             BlocProvider<CarCubit>(create: (context) => CarCubit(CarService())),
+            BlocProvider<ParkingCubit>(
+                create: (context) => ParkingCubit(ParkingService())),
           ], child: const HomeScreen()),
         );
       case carDetailsScreen:
