@@ -20,6 +20,11 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<bool> attemptTokenRefresh() async {
+    bool result = await authService.attemptTokenRefresh();
+    return result;
+  }
+
   Future<void> monitorTokenExpiration() async {
     final refreshSuccessful = await authService.monitorTokenExpiration();
 
@@ -37,7 +42,13 @@ class AuthCubit extends Cubit<AuthState> {
       emit(UserLoggedIn());
     } catch (e) {
       emit(AuthFailure(e.toString()));
+      emit(UserLoggedOut());
     }
+  }
+
+  Future<bool> isLoggedIn() async {
+    final isLoggedIn = await authService.isLoggedIn();
+    return isLoggedIn;
   }
 
   Future<void> logout() async {
@@ -46,6 +57,7 @@ class AuthCubit extends Cubit<AuthState> {
       emit(UserLoggedOut()); 
     } catch (e) {
       emit(AuthFailure(e.toString()));
+      emit(UserLoggedOut());
     }
   }
 

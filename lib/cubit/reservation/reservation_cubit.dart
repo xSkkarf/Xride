@@ -52,7 +52,7 @@ class ReservationCubit extends Cubit<ReservationState> {
       await reservationService.releaseCar(carId);
       emit(ReservationInitial());
     } catch(e){
-      null;
+      throw Exception(e.toString()); 
     }
   }
 }

@@ -1,8 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xride/constants/constants.dart';
+import 'package:xride/network/api_client.dart';
 
 class PaymentService{
+
+  final ApiClient apiClient = ApiClient(); 
 
   Future<String> getPaymentKey(int amount,String currency)async{
     try {
@@ -47,7 +50,7 @@ class PaymentService{
   }
 
   Future<String>getAuthenticationToken()async{
-    final Response response=await Dio().post(
+    final Response response=await apiClient.dio.post(
       "https://accept.paymob.com/api/auth/tokens",
       data: {
         "api_key":XConstants.payMobApiKey, 
@@ -65,7 +68,7 @@ class PaymentService{
     int amount,
     String accessToken
     )async{
-      final Response response = await Dio().post(
+      final Response response = await apiClient.dio.post(
         "${XConstants.baseUrl}/${XConstants.backendVersion}/user/payments/create/",
         options: Options(headers: {'Authorization': 'JWT $accessToken'}),
         data: {
@@ -82,7 +85,7 @@ class PaymentService{
     required String amount,
     required String currency,
   })async{
-    final Response response=await Dio().post(
+    final Response response=await apiClient.dio.post(
       "https://accept.paymob.com/api/ecommerce/orders",
       data: {
         "auth_token":  authanticationToken,
@@ -101,7 +104,7 @@ class PaymentService{
     required String amount,
     required String currency,
   }) async{
-    final Response response=await Dio().post(
+    final Response response=await apiClient.dio.post(
       "https://accept.paymob.com/api/acceptance/payment_keys",
       data: {
         //ALL OF THEM ARE REQIERD

@@ -174,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: DraggableScrollableSheet(
                           initialChildSize: 0.1, // Default height of the sheet
                           minChildSize: 0.1, // Minimum height (collapsed)
-                          maxChildSize: 0.6, // Maximum height (expanded)
+                          maxChildSize: 0.45, // Maximum height (expanded)
                           builder: (context, scrollController) {
                             return Container(
                               decoration: const BoxDecoration(
@@ -230,12 +230,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                             const SizedBox(height: 20),
                                             ElevatedButton(
                                               onPressed: () async {
-                                                await context.read<ReservationCubit>().releaseCar(reservationState.response['car_id']);
-                                                updateCars();
-                                                context.read<UserCubit>().fetchUserInfo();
+                                                try {
+                                                  await context.read<ReservationCubit>().releaseCar(reservationState.response['car_id']);
+                                                  updateCars(); // Refresh the car list
+                                                  context.read<UserCubit>().fetchUserInfo(); // Refresh user balance
+                                                } catch (e) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(e.toString().replaceAll('Exception:', '').trim()), // Remove "Exception:" from message
+                                                    ),
+                                                  );
+                                                }
                                               },
-                                              child: const Text(
-                                                  'Release the car'),
+                                              child: const Text('Release the car'),
                                             ),
                                           ],
                                         ),

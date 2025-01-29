@@ -6,6 +6,7 @@ import 'package:xride/cubit/auth/auth_cubit.dart';
 import 'package:xride/cubit/reservation/reservation_cubit.dart';
 import 'package:xride/cubit/user/user_cubit.dart';
 import 'package:xride/data/user/user_repo.dart';
+import 'package:xride/network/api_client.dart';
 import 'package:xride/services/auth_service.dart';
 import 'package:xride/services/reservation_service.dart';
 
@@ -38,12 +39,14 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     context.read<AuthCubit>().checkLoginStatus();
-    context.read<AuthCubit>().monitorTokenExpiration();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+
+    ApiClient().initialize(context);
+
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is UserLoggedIn) {
@@ -52,7 +55,7 @@ class _MyAppState extends State<MyApp> {
       },
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'XRide App',
+        title: 'Xride App',
         onGenerateRoute: appRouter.generateRoute,
         initialRoute: initScreen,
       ),

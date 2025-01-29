@@ -2,18 +2,23 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xride/constants/constants.dart';
 import 'package:xride/data/cars/car_model.dart';
+import 'package:xride/network/api_client.dart';
 
 class CarRepo {
+
+  final ApiClient apiClient = ApiClient(); 
+
   Future<List<CarModel>> fetchCars(String latitude, String longitude) async {
     final prefs = await SharedPreferences.getInstance();
     final String? accessToken = prefs.getString('accessToken');
+
 
     if (accessToken == null) {
       throw Exception('No access token found');
     }
 
     try {
-      final response = await Dio().get(
+      final response = await apiClient.dio.get(
         '${XConstants.baseUrl}/${XConstants.backendVersion}/car/nearby-available/',
         options: Options(headers: {'Authorization': 'JWT $accessToken'}),
         queryParameters: {

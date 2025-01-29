@@ -2,14 +2,15 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xride/constants/constants.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:xride/network/api_client.dart';
 
 class AuthService {
-  final Dio dio = Dio();
+  final ApiClient apiClient = ApiClient(); 
   final String baseUrl = XConstants.baseUrl;
 
   Future<String> login(String username, String password) async {
     try{
-      final response = await dio.post('$baseUrl/auth/jwt/create/', data: {
+      final response = await apiClient.dio.post('$baseUrl/auth/jwt/create/', data: {
         'username': username,
         'password': password,
       });
@@ -54,13 +55,16 @@ class AuthService {
 
     if (accessToken == null && refreshToken != null) {
       // Access token is missing but refresh token exists, try refreshing
-      return await attemptTokenRefresh(refreshToken, prefs);
+      return await attemptTokenRefresh();
     }
 
     // Check if the access token is expired
     if (JwtDecoder.isExpired(accessToken!)) {
+      if (refreshToken == null || JwtDecoder.isExpired(refreshToken)){
+        return false;
+      }
       // Attempt to refresh the token
-      return await attemptTokenRefresh(refreshToken!, prefs);
+      return await attemptTokenRefresh();
     }
 
     // If token is still valid, return true
@@ -68,10 +72,15 @@ class AuthService {
   }
 
   // Helper function to handle token refreshing
-  Future<bool> attemptTokenRefresh(String refreshToken, SharedPreferences prefs) async {
+  Future<bool> attemptTokenRefresh() async {
+    final prefs = await SharedPreferences.getInstance();
+    final refreshToken = prefs.getString('refreshToken');
     try {
       print('Attempting to refresh token...');
-      final response = await dio.post('$baseUrl/auth/jwt/refresh/', data: {
+      if(refreshToken == null || JwtDecoder.isExpired(refreshToken)){
+        return false;
+      }
+      final response = await apiClient.dio.post('$baseUrl/auth/jwt/refresh/', data: {
         'refresh': refreshToken,
       });
 
@@ -93,11 +102,6 @@ class AuthService {
   }
 
 
-  Future<String> getAccessToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('accessToken')!;
-  }
-
   Future<bool> monitorTokenExpiration() async {
     final prefs = await SharedPreferences.getInstance();
     final accessToken = prefs.getString('accessToken');
@@ -105,14 +109,14 @@ class AuthService {
 
     print('Monitoring token expiration...');
     
-    if (refreshToken == null) {
+    if (refreshToken == null || JwtDecoder.isExpired(refreshToken)) {
       print('Refresh token is null. Logging out.');
       return false;
     }
 
     if (accessToken != null && JwtDecoder.isExpired(accessToken)) {
       print('Access token has expired. Attempting to refresh.');
-      return await attemptTokenRefresh(refreshToken, prefs);
+      return await attemptTokenRefresh();
     } else if (accessToken != null) {
       final expirationDate = JwtDecoder.getExpirationDate(accessToken);
       final currentTime = DateTime.now();
@@ -123,7 +127,7 @@ class AuthService {
       if (timeUntilExpiration > const Duration(minutes: 1)) {
         print('Scheduling token refresh 1 minute before expiration.');
         Future.delayed(timeUntilExpiration - const Duration(minutes: 1), () async {
-          final success = await attemptTokenRefresh(refreshToken, prefs);
+          final success = await attemptTokenRefresh();
           if (success) {
             print('Token successfully refreshed. Monitoring again.');
             await monitorTokenExpiration(); // Continue monitoring after refresh
@@ -131,7 +135,7 @@ class AuthService {
         });
       } else {
         print('Token is expiring soon. Refreshing now.');
-        final success = await attemptTokenRefresh(refreshToken, prefs);
+        final success = await attemptTokenRefresh();
         if (success) {
           print('Token successfully refreshed. Monitoring again.');
           await monitorTokenExpiration(); // Continue monitoring after refresh
@@ -156,7 +160,7 @@ class AuthService {
     String rePassword) async {
 
       try{
-        final response = await dio.post('$baseUrl/auth/users/', data: {
+        final response = await apiClient.dio.post('$baseUrl/auth/users/', data: {
           'username': username,
           'email': email,
           'first_name': firstName,

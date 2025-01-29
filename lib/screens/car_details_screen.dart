@@ -227,14 +227,7 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                               ),
                               BlocListener<ReservationCubit, ReservationState>(
                                 listener: (context, state) {
-                                  if (state is ReservationSuccess) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            'Reserved for $selectedPriceOption'),
-                                      ),
-                                    );
-                                  } else if (state is ReservationError) {
+                                  if (state is ReservationError) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(state.message),

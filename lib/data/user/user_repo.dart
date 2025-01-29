@@ -3,9 +3,12 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xride/constants/constants.dart';
 import 'package:xride/data/user/user_model.dart';
+import 'package:xride/network/api_client.dart';
 
 class UserRepo {
 
+  final ApiClient apiClient = ApiClient(); 
+  
   Future<UserModel> fetchUserProfile() async {
     final prefs = await SharedPreferences.getInstance();
     final String? accessToken = prefs.getString('accessToken');
@@ -15,7 +18,7 @@ class UserRepo {
     }
 
     try {
-      final response = await Dio().get(
+      final response = await apiClient.dio.get(
         '${XConstants.baseUrl}/${XConstants.backendVersion}/user/profile',
         options: Options(headers: {'Authorization': 'JWT $accessToken'}),
       );
