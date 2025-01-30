@@ -248,7 +248,6 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
                                               plans[selectedPriceOption!]!,
                                               widget.reservationArgs.latitude,
                                               widget.reservationArgs.longitude,
-                                              widget.reservationArgs.carUpdateCallback,
                                             );
                                             if (result) {Navigator.of(context).pop();};
                                           }: null,

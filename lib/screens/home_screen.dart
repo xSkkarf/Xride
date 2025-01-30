@@ -25,7 +25,9 @@ class _HomeScreenState extends State<HomeScreen> {
   double latitude = 0.0;
   double longitude = 0.0;
   Set<Marker> allMarkers = {};
+  Set<Marker> tempMarkers = {};
   Set<Circle> allCircles = {};
+  Map<ParkingModel, double> sortedParkings = {};
 
   @override
   void initState() {
@@ -33,7 +35,13 @@ class _HomeScreenState extends State<HomeScreen> {
     context.read<LocationCubit>().fetchInitialLocation();
     context.read<UserCubit>().fetchUserInfo();
     context.read<ReservationCubit>().checkActiveReservation();
-    context.read<ParkingCubit>().fetchParkings();
+    context.read<ParkingCubit>().fetchParkings(latitude, longitude);
+  }
+
+  void toggleMarkers() {
+    setState(() {
+      allMarkers = allMarkers.isEmpty ? tempMarkers : {};
+    });
   }
 
   void updateParkingMarkers(List<ParkingModel> parkings) {
@@ -44,11 +52,32 @@ class _HomeScreenState extends State<HomeScreen> {
             circleId: CircleId('parking_${parking.id}'),
             center: LatLng(parking.latitude, parking.longitude),
             radius: parking.radius*1000,
-            fillColor: Colors.blue.withOpacity(0.3),
-            strokeWidth: 0,
+            fillColor: Colors.green.withOpacity(0.3),
+            strokeWidth: 2,
+            strokeColor: Colors.green.withOpacity(0.5),
+            consumeTapEvents: true,
+            onTap: () => {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Parking: ${parking.parkName}'),
+                ),
+              ),
+            },
           ),
         ),
       );
+      allMarkers.addAll(
+        parkings.map(
+          (parking) => Marker(
+            markerId: MarkerId('parking_${parking.id}'),
+            position: LatLng(parking.latitude, parking.longitude),
+            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            infoWindow: InfoWindow(title: parking.parkName),
+          ),
+        ),
+      );
+
+      tempMarkers = allMarkers;
     });
   }
 
@@ -61,15 +90,8 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       AppRouter.carDetailsScreen,
       arguments:
-          ReservationArgs(car, latitude.toString(), longitude.toString(), clearCarMarkers),
+          ReservationArgs(car, latitude.toString(), longitude.toString()),
     );
-  }
-
-  void clearCarMarkers() {
-    setState(() {
-      allMarkers = {};
-    });
-    context.read<UserCubit>().fetchUserInfo();
   }
 
   void updateCars() {
@@ -79,18 +101,30 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<Map<ParkingModel, double>> releaseCar(int carId) async{
+    final sortedParkings = context.read<ReservationCubit>().beginRelease(carId, () async {
+      final parkings = ( context.read<ParkingCubit>().state as ParkingLoaded).parkings;
+      final sortedParkings = context.read<ParkingCubit>().sortParkingsByDistance(parkings, latitude, longitude);
+      return sortedParkings;
+    });
+    return sortedParkings;
+    // await context.read<ReservationCubit>().releaseCar(carId, selectedParking.id, latitude, longitude);
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home Screen'),
+        title: const Text('Xride'),
         actions: [
+          IconButton(onPressed: toggleMarkers, icon: const Icon(Icons.toggle_off)),
           IconButton(
               onPressed: () {
                 updateCars();
                 context.read<UserCubit>().fetchUserInfo();
                 context.read<ReservationCubit>().checkActiveReservation();
-                context.read<ParkingCubit>().fetchParkings();
+                context.read<ParkingCubit>().fetchParkings(latitude, longitude);
               },
               icon: const Icon(Icons.refresh)),
           IconButton(
@@ -221,109 +255,166 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ],
                               ),
-                              child: BlocBuilder<ReservationCubit,ReservationState>(
-                                builder: (context, reservationState) {
-                                  if (reservationState is ReservationSuccess) {
-                                    // Display active reservation details
-                                    return SingleChildScrollView(
-                                      controller: scrollController,
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Active Reservation',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .headlineMedium,
-                                            ),
-                                            const SizedBox(height: 10),
-                                            Text(
-                                              'Car: ${reservationState.response['car_model']}',
-                                              style:
-                                                  const TextStyle(fontSize: 16),
-                                            ),
-                                            Text(
-                                              'Reservation Plan: ${reservationState.response['reservation_plan']}',
-                                              style:
-                                                  const TextStyle(fontSize: 16),
-                                            ),
-                                            Text(
-                                              'Start Time: ${reservationState.response['start_time']}',
-                                              style:
-                                                  const TextStyle(fontSize: 16),
-                                            ),
-                                            Text(
-                                              'End Time: ${reservationState.response['end_time']}',
-                                              style:
-                                                  const TextStyle(fontSize: 16),
-                                            ),
-                                            const SizedBox(height: 20),
-                                            ElevatedButton(
-                                              onPressed: () async {
-                                                try {
-                                                  await context.read<ReservationCubit>().releaseCar(reservationState.response['car_id']);
-                                                  updateCars(); // Refresh the car list
-                                                  context.read<UserCubit>().fetchUserInfo(); // Refresh user balance
-                                                } catch (e) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(e.toString().replaceAll('Exception:', '').trim()), // Remove "Exception:" from message
-                                                    ),
-                                                  );
-                                                }
-                                              },
-                                              child: const Text('Release the car'),
-                                            ),
-                                          ],
-                                        ),
+                              child: BlocListener<ReservationCubit, ReservationState>(
+                                listener: (context, reservationState) {
+                                  if (reservationState is ReservationCancellingSuccess) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Car released successfully'),
                                       ),
                                     );
-                                  } 
-                                  else if (reservationState is ReservationLoading) {
-                                    return const Center(
-                                      child: CircularProgressIndicator(),
-                                    );
-                                  }
-                                  else {
-                                    // Display list of available cars
-                                    return ListView.builder(
-                                      controller:
-                                          scrollController, // Enables scrolling in sheet
-                                      itemCount: carState.cars.length + 1,
-                                      itemBuilder: (context, index) {
-                                        if (index == 0) {
-                                          return Container(
-                                            margin: const EdgeInsets.fromLTRB(
-                                                100, 10, 100, 10),
-                                            height: 5,
-                                            width: 10,
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              color: Colors.grey,
-                                            ),
-                                          );
-                                        }
-                                        final car = carState.cars[index - 1];
-                                        return ListTile(
-                                          leading: const Icon(
-                                            Icons.directions_car,
-                                            color: Colors.blue,
-                                          ),
-                                          title: Text(car.carModel),
-                                          subtitle:
-                                              Text('\$${car.bookingPrice12H}'),
-                                          onTap: () {
-                                            onTapCar(car);
-                                          },
-                                        );
-                                      },
-                                    );
+                                    context.read<ReservationCubit>().checkActiveReservation();
+                                    context.read<ParkingCubit>().fetchParkings(latitude, longitude);
+                                    updateCars();
+                                    context.read<UserCubit>().fetchUserInfo();
                                   }
                                 },
+                                child: 
+                                BlocBuilder<ReservationCubit,ReservationState>(
+                                  builder: (context, reservationState) {
+                                    if (reservationState is ReservationSuccess) {
+                                      // Display active reservation details
+                                      return SingleChildScrollView(
+                                        controller: scrollController,
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Active Reservation',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .headlineMedium,
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Text(
+                                                'Car: ${reservationState.response['car_model']}',
+                                                style:
+                                                    const TextStyle(fontSize: 16),
+                                              ),
+                                              Text(
+                                                'Reservation Plan: ${reservationState.response['reservation_plan']}',
+                                                style:
+                                                    const TextStyle(fontSize: 16),
+                                              ),
+                                              Text(
+                                                'Start Time: ${reservationState.response['start_time']}',
+                                                style:
+                                                    const TextStyle(fontSize: 16),
+                                              ),
+                                              Text(
+                                                'End Time: ${reservationState.response['end_time']}',
+                                                style:
+                                                    const TextStyle(fontSize: 16),
+                                              ),
+                                              const SizedBox(height: 20),
+                                              ElevatedButton(
+                                                onPressed: () async {
+                                                  try {
+                                                    sortedParkings = await releaseCar(reservationState.response['car_id']);
+                                                  } catch (e) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(e.toString().replaceAll('Exception:', '').trim()), // Remove "Exception:" from message
+                                                      ),
+                                                    );
+                                                  }
+                                                },
+                                                child: const Text('Release the car'),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    else if (reservationState is ReservationCancelling){
+                                      return Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: ListView.builder(
+                                            controller: scrollController,
+                                            itemCount: sortedParkings.length+1,
+                                            itemBuilder: (context, index) {
+                                              if (index == 0){
+                                                return Padding(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                                  child: ElevatedButton(
+                                                    onPressed: () {
+                                                      context.read<ReservationCubit>().cancelRelease();
+                                                    },
+                                                    child: const Text('Back'),
+                                                  ),
+                                                );
+                                              }
+                                              final parking = sortedParkings.keys.elementAt(index-1);
+                                              return ListTile(
+                                                title: Text(parking.parkName),
+                                                subtitle: Text('Distance: ${(sortedParkings[parking]!/1000).toStringAsFixed(2)} km'),
+                                                trailing: IconButton(onPressed: () {
+                                                    mapController!.animateCamera(CameraUpdate.newLatLng(LatLng(parking.latitude, parking.longitude)));
+                                                  },
+                                                  icon: const Icon(Icons.directions),
+                                                ),
+                                                onTap: () async {
+                                                  try {
+                                                    await context.read<ReservationCubit>().releaseCar(reservationState.carId, parking.id, latitude, longitude);
+                                                  } catch (e) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(e.toString().replaceAll('Exception:', '').trim()), // Remove "Exception:" from message
+                                                      ),
+                                                    );
+                                                  }
+                                                },
+                                              );
+                                            },
+                                          ),
+                                      );
+                                    }
+                                    else if (reservationState is ReservationLoading) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                    else {
+                                      // Display list of available cars
+                                      return ListView.builder(
+                                        controller:
+                                            scrollController, // Enables scrolling in sheet
+                                        itemCount: carState.cars.length + 1,
+                                        itemBuilder: (context, index) {
+                                          if (index == 0) {
+                                            return Container(
+                                              margin: const EdgeInsets.fromLTRB(
+                                                  100, 10, 100, 10),
+                                              height: 5,
+                                              width: 10,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                color: Colors.grey,
+                                              ),
+                                            );
+                                          }
+                                          final car = carState.cars[index - 1];
+                                          return ListTile(
+                                            leading: const Icon(
+                                              Icons.directions_car,
+                                              color: Colors.blue,
+                                            ),
+                                            title: Text(car.carModel),
+                                            subtitle:
+                                                Text('\$${car.bookingPrice12H}'),
+                                            onTap: () {
+                                              onTapCar(car);
+                                            },
+                                          );
+                                        },
+                                      );
+                                    }
+                                  },
+                                ),
                               ),
                             );
                           },

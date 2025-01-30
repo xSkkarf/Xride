@@ -7,14 +7,9 @@ class ReservationService {
 
   final ApiClient apiClient = ApiClient();
   
-  dynamic getLocalTime(dynamic response) {
-    if (response['status'] == 'active') {
-      final startTime = DateTime.parse(response['start_time']).toLocal();
-      final endTime = DateTime.parse(response['end_time']).toLocal();
-      response['start_time'] = startTime;
-      response['end_time'] = endTime;
-    }
-    return response;
+  dynamic getLocalTime(String time) {
+    final localTime = DateTime.parse(time).toLocal();
+    return localTime;
   }
 
   Future<dynamic> checkActiveReservation() async {
@@ -27,9 +22,17 @@ class ReservationService {
         options: Options(headers: {'Authorization': 'JWT $accessToken'}),
       );
 
-      // handle time zone conversion for start time and end time
-      final data = getLocalTime(response.data);
-      
+      final data = {
+        'reservation_id': response.data['reservation_id'],
+        'car_id': response.data['car_id'],
+        'car_model': response.data['car_model'],
+        'car_plate': response.data['car_plate'],
+        'reservation_plan': response.data['reservation_plan'],
+        'start_time': getLocalTime(response.data['start_time']),
+        'end_time': getLocalTime(response.data['end_time']),
+        'status': response.data['status'],
+      };
+
       return data;
 
     } on DioException catch (e) {
@@ -100,7 +103,7 @@ class ReservationService {
     }
   }
 
-  Future<void> releaseCar(int carId) async {
+  Future<void> releaseCar(int carId, int parkingId, double latitude, double longitude) async {
     final prefs = await SharedPreferences.getInstance();
     final String accessToken = prefs.getString('accessToken')!;
 
@@ -108,6 +111,11 @@ class ReservationService {
       await apiClient.dio.post(
         "${XConstants.baseUrl}/${XConstants.backendVersion}/car/$carId/release/",
         options: Options(headers: {'Authorization': 'JWT $accessToken'}),
+        data: {
+          'park_dist': parkingId,
+          'location_latitude': latitude,
+          'location_longitude': longitude,
+        },
       );
 
     } on DioException catch (e) {
@@ -115,7 +123,7 @@ class ReservationService {
         print('DioException: ${e.message}');
         print('Status code: ${e.response?.statusCode}');
         print('Response data: ${e.response?.data}');
-        throw Exception(e.response?.data['detail']);
+        throw Exception(e.response?.data['error']);
       } else {
         print('DioException: ${e.message}');
       }

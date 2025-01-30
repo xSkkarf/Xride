@@ -13,6 +13,13 @@ final class ReservationSuccess extends ReservationState {
   ReservationSuccess(this.response);
 }
 
+final class ReservationCancelling extends ReservationState {
+  final int carId;
+
+  ReservationCancelling(this.carId);
+}
+final class ReservationCancellingSuccess extends ReservationState {}
+
 final class ReservationError extends ReservationState {
   final String message;
 
