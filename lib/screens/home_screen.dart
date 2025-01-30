@@ -25,9 +25,13 @@ class _HomeScreenState extends State<HomeScreen> {
   double latitude = 0.0;
   double longitude = 0.0;
   Set<Marker> allMarkers = {};
-  Set<Marker> tempMarkers = {};
+  Set<Marker> parkMarkers = {};
   Set<Circle> allCircles = {};
+  Set<Polyline> allPolylines = {};
+  int lastSelectedMarkerId = -1;
+  
   Map<ParkingModel, double> sortedParkings = {};
+  bool parkMarkersToggle = true;
 
   @override
   void initState() {
@@ -40,9 +44,46 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void toggleMarkers() {
     setState(() {
-      allMarkers = allMarkers.isEmpty ? tempMarkers : {};
+      parkMarkersToggle = !parkMarkersToggle;
+      parkMarkersToggle ? allMarkers.addAll(parkMarkers) : allMarkers.removeAll(parkMarkers);
     });
   }
+
+  Future<void> drawRouteToParking(double destLatitude, double destLongitude) async {
+    try {
+      // Fetch current location from LocationCubit
+      final locationState = context.read<LocationCubit>().state;
+      if (locationState is! LocationLoaded) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to fetch current location")),
+        );
+        return;
+      }
+
+      final double userLat = locationState.locationData.latitude!;
+      final double userLon = locationState.locationData.longitude!;
+
+      // Fetch directions from Google Maps API
+      final List<LatLng> routePoints = await context.read<LocationCubit>().getRoutePoints(userLat, userLon, destLatitude, destLongitude);
+
+      setState(() {
+        allPolylines.clear(); // Remove existing routes
+        allPolylines.add(
+          Polyline(
+            polylineId: const PolylineId('route'),
+            color: Colors.blue,
+            width: 5,
+            points: routePoints,
+            geodesic: true,
+          ),
+        );
+
+      });
+    } catch (e) {
+      print("Error drawing route: $e");
+    }
+  }
+
 
   void updateParkingMarkers(List<ParkingModel> parkings) {
     setState(() {
@@ -55,29 +96,36 @@ class _HomeScreenState extends State<HomeScreen> {
             fillColor: Colors.green.withOpacity(0.3),
             strokeWidth: 2,
             strokeColor: Colors.green.withOpacity(0.5),
-            consumeTapEvents: true,
-            onTap: () => {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Parking: ${parking.parkName}'),
-                ),
-              ),
-            },
           ),
         ),
       );
-      allMarkers.addAll(
+      parkMarkers.addAll(
         parkings.map(
           (parking) => Marker(
             markerId: MarkerId('parking_${parking.id}'),
             position: LatLng(parking.latitude, parking.longitude),
             icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-            infoWindow: InfoWindow(title: parking.parkName),
+            infoWindow: InfoWindow(
+              title: parking.parkName,
+              onTap: () async {
+                if (lastSelectedMarkerId == parking.id) {
+                  setState(() {
+                    allPolylines.clear();
+                    lastSelectedMarkerId = -1;
+                  });
+                  return;
+                }
+                await drawRouteToParking(parking.latitude, parking.longitude);
+                lastSelectedMarkerId = parking.id;
+              },
+            ),
+            zIndex: 5,
           ),
         ),
       );
 
-      tempMarkers = allMarkers;
+      allMarkers.addAll(parkMarkers);
+
     });
   }
 
@@ -118,7 +166,11 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Xride'),
         actions: [
-          IconButton(onPressed: toggleMarkers, icon: const Icon(Icons.toggle_off)),
+          IconButton(
+            onPressed: toggleMarkers,
+            icon: Icon(!parkMarkersToggle ? Icons.location_off: Icons.location_on),
+            color: (!parkMarkersToggle ? Colors.black : Colors.green),
+          ),
           IconButton(
               onPressed: () {
                 updateCars();
@@ -222,6 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           initialCameraPosition: state.initialPosition,
                           myLocationEnabled: true,
                           myLocationButtonEnabled: true,
+                          polylines: allPolylines,
                         ),
                       );
                     } else if (state is LocationError) {
@@ -348,25 +401,30 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 );
                                               }
                                               final parking = sortedParkings.keys.elementAt(index-1);
-                                              return ListTile(
-                                                title: Text(parking.parkName),
-                                                subtitle: Text('Distance: ${(sortedParkings[parking]!/1000).toStringAsFixed(2)} km'),
-                                                trailing: IconButton(onPressed: () {
-                                                    mapController!.animateCamera(CameraUpdate.newLatLng(LatLng(parking.latitude, parking.longitude)));
-                                                  },
-                                                  icon: const Icon(Icons.directions),
+                                              return Material(
+                                                color: Colors.white,
+                                                child: InkWell(
+                                                  onTap: () async {
+                                                      try {
+                                                        await context.read<ReservationCubit>().releaseCar(reservationState.carId, parking.id, latitude, longitude);
+                                                      } catch (e) {
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          SnackBar(
+                                                            content: Text(e.toString().replaceAll('Exception:', '').trim()), // Remove "Exception:" from message
+                                                          ),
+                                                        );
+                                                      }
+                                                    },
+                                                  child: ListTile(
+                                                    title: Text(parking.parkName),
+                                                    subtitle: Text('Distance: ${(sortedParkings[parking]!/1000).toStringAsFixed(2)} km'),
+                                                    trailing: IconButton(onPressed: () {
+                                                        mapController!.animateCamera(CameraUpdate.newLatLng(LatLng(parking.latitude, parking.longitude)));
+                                                      },
+                                                      icon: const Icon(Icons.directions),
+                                                    ),
+                                                  ),
                                                 ),
-                                                onTap: () async {
-                                                  try {
-                                                    await context.read<ReservationCubit>().releaseCar(reservationState.carId, parking.id, latitude, longitude);
-                                                  } catch (e) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      SnackBar(
-                                                        content: Text(e.toString().replaceAll('Exception:', '').trim()), // Remove "Exception:" from message
-                                                      ),
-                                                    );
-                                                  }
-                                                },
                                               );
                                             },
                                           ),
@@ -398,17 +456,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                             );
                                           }
                                           final car = carState.cars[index - 1];
-                                          return ListTile(
-                                            leading: const Icon(
-                                              Icons.directions_car,
-                                              color: Colors.blue,
+                                          return Material(
+                                            color: Colors.white,
+                                            child: InkWell(
+                                              onTap: () {
+                                                  onTapCar(car);
+                                                },
+                                              child: ListTile(
+                                                leading: const Icon(
+                                                  Icons.directions_car,
+                                                  color: Colors.blue,
+                                                ),
+                                                title: Text(car.carModel),
+                                                subtitle:
+                                                    Text('\$${car.bookingPrice12H}'),
+                                              ),
                                             ),
-                                            title: Text(car.carModel),
-                                            subtitle:
-                                                Text('\$${car.bookingPrice12H}'),
-                                            onTap: () {
-                                              onTapCar(car);
-                                            },
                                           );
                                         },
                                       );

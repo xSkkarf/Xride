@@ -6,4 +6,6 @@ class XConstants{
 
   static final String payMobApiKey = dotenv.env['PAYMOB_API_KEY'] ?? "";
   static final String payMobIntegrationId = dotenv.env['PAYMOB_INTEGRATION_ID'] ?? "";
+
+  static final String googleMapsApiKey = dotenv.env['GOOGLE_MAPS_API_KEY'] ?? "";
 }
