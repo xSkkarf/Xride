@@ -153,6 +153,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.map), label: "Live Tracking"),
           BottomNavigationBarItem(icon: Icon(Icons.admin_panel_settings), label: "Admin Panel"),

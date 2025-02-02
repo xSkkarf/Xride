@@ -155,7 +155,8 @@ class _HomeScreenState extends State<HomeScreen> {
       final parkings = ( context.read<ParkingCubit>().state as ParkingLoaded).parkings;
       final sortedParkings = context.read<ParkingCubit>().sortParkingsByDistance(parkings, latitude, longitude);
       return sortedParkings;
-    });
+     }
+    );
     return sortedParkings;
   }
 
@@ -372,19 +373,25 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       const TextStyle(fontSize: 16),
                                                 ),
                                                 const SizedBox(height: 20),
-                                                ElevatedButton(
-                                                  onPressed: () async {
-                                                    try {
-                                                      sortedParkings = await releaseCar(reservationState.response['car_id']);
-                                                    } catch (e) {
-                                                      ScaffoldMessenger.of(context).showSnackBar(
-                                                        SnackBar(
-                                                          content: Text(e.toString().replaceAll('Exception:', '').trim()), // Remove "Exception:" from message
-                                                        ),
-                                                      );
-                                                    }
-                                                  },
-                                                  child: const Text('Release the car'),
+                                                Row(
+                                                  children: [
+                                                    ElevatedButton(
+                                                      onPressed: () async {
+                                                        try {
+                                                          sortedParkings = await releaseCar(reservationState.response['car_id']);
+                                                        } catch (e) {
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(e.toString().replaceAll('Exception:', '').trim()), // Remove "Exception:" from message
+                                                            ),
+                                                          );
+                                                        }
+                                                      },
+                                                      child: const Text('Release the car'),
+                                                    ),
+                                                    const SizedBox(width: 10),
+                                                    
+                                                  ],
                                                 ),
                                               ],
                                             ),
