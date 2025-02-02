@@ -15,6 +15,7 @@ class UserCubit extends Cubit<UserState> {
       emit(UserLoading());
       final user = await userRepo.fetchUserProfile();
       updateUserData(user);
+      emit(UserFetchSuccess(user));
     } catch (e) {
       emit(UserFetchFail(e.toString()));
     }
@@ -22,6 +23,5 @@ class UserCubit extends Cubit<UserState> {
 
   void updateUserData(UserModel user) {
     userRepo.saveUser(user);
-    emit(UserFetchSuccess(user));
   }
 }

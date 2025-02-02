@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:xride/cubit/car/car_cubit.dart';
+import 'package:xride/cubit/live_data/live_data_cubit.dart';
 import 'package:xride/cubit/location/location_cubit.dart';
 import 'package:xride/cubit/parking/parking_cubit.dart';
 import 'package:xride/cubit/payment/payment_cubit.dart';
 import 'package:xride/cubit/reservation/reservation_cubit.dart';
 import 'package:xride/cubit/user_photo/user_photo_cubit.dart';
+import 'package:xride/screens/admin_home_screen.dart';
 import 'package:xride/screens/car_details_screen.dart';
 import 'package:xride/screens/home_screen.dart';
 import 'package:xride/screens/login_screen.dart';
@@ -27,6 +29,7 @@ class AppRouter {
   static const String paymentWebScreen = "/payment_web_screen";
   static const String carDetailsScreen = "/car_details_screen";
   static const String profileScreen = "/profile_screen";
+  static const String adminHomeScreen = "/admin_home_screen";
 
   Route? generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -69,6 +72,18 @@ class AppRouter {
                 child: const ProfileScreen(),
               )
             );
+      case adminHomeScreen:
+        return MaterialPageRoute(
+          builder: (BuildContext context) => MultiBlocProvider(
+            providers: [
+              BlocProvider<LocationCubit>(
+                  create: (context) => LocationCubit(LocationService())
+              ),
+              BlocProvider<LiveDataCubit>(create: (context) => LiveDataCubit()),
+            ],
+            child: const AdminHomeScreen()
+          )
+        );
     }
     return null;
   }

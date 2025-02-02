@@ -12,7 +12,7 @@ part 'live_data_state.dart';
 
 class LiveDataCubit extends Cubit<LiveDataState> {
   final WebSocketChannel _channel = WebSocketChannel.connect(
-    Uri.parse("ws://${XConstants.baseUrl}/ws/car-status/"),
+    Uri.parse("wss://${XConstants.hostName}/ws/car-status/"),
   );
 
   Set<Marker> carMarkers = {};
@@ -23,24 +23,46 @@ class LiveDataCubit extends Cubit<LiveDataState> {
 
   void _listenToCarUpdates() {
     _channel.stream.listen((event) {
-      final List<dynamic> carsData = jsonDecode(event);
-      List<LiveDataModel> cars = carsData.map((car) => LiveDataModel.fromJson(car)).toList();
+      if (event != null && event.isNotEmpty) { // Prevent decoding null/empty data
+        try {
+          final dynamic data = jsonDecode(event);
+          
+          if (data is! Map<String, dynamic>) {
+            print("Invalid data format received: $data");
+            return; // Exit if data is not a map
+          }
 
-      Set<Marker> newMarkers = cars.map((car) {
-        return Marker(
-          markerId: MarkerId(car.carId.toString()),
-          position: LatLng(car.latitude, car.longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-          infoWindow: InfoWindow(
-            title: car.carId.toString(),
-            snippet: "Speed: ${car.speed} km/h, Fuel: ${car.fuel}%",
-          ),
-        );
-      }).toSet();
+          if (!data.containsKey('car_data')) {
+            print("Missing 'car_data' key: $data");
+            return; // Exit if key is missing
+          }
 
-      emit(LiveDataLoaded(liveData: cars, carMarkers: newMarkers));
+          LiveDataModel car = LiveDataModel.fromJson(data['car_data']);
+
+          print('######## Speed: ${car.speed}');
+
+          Set<Marker> newMarkers = {
+            Marker(
+              markerId: MarkerId(car.carId.toString()),
+              position: LatLng(car.latitude, car.longitude),
+              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+              infoWindow: InfoWindow(
+                title: car.carId.toString(),
+                snippet: "Speed: ${car.speed} km/h, Fuel: ${car.fuel}%",
+              ),
+            ),
+          };
+
+          emit(LiveDataLoaded(liveData: car, carMarkers: newMarkers));
+        } catch (e) {
+          print("JSON Parsing Error: $e"); // Debugging
+        }
+      } else {
+        print("Received empty WebSocket event");
+      }
     });
   }
+
 
   @override
   Future<void> close() {

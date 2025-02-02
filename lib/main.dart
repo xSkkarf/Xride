@@ -47,18 +47,11 @@ class _MyAppState extends State<MyApp> {
 
     ApiClient().initialize(context);
 
-    return BlocListener<AuthCubit, AuthState>(
-      listener: (context, state) {
-        if (state is UserLoggedIn) {
-          initScreen = AppRouter.homeScreen;
-        }
-      },
-      child: MaterialApp(
+    return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Xride App',
         onGenerateRoute: appRouter.generateRoute,
         initialRoute: initScreen,
-      ),
-    );
+      );
   }
 }

@@ -11,6 +11,8 @@ class UserModel {
   String personalPhoto;
   String nationalIdPhoto;
   String licencePhoto;
+  bool isStaff;
+  bool isSuperUser;
 
   UserModel({
     required this.username,
@@ -25,6 +27,8 @@ class UserModel {
     required this.personalPhoto,
     required this.nationalIdPhoto,
     required this.licencePhoto,
+    required this.isStaff,
+    required this.isSuperUser,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -41,6 +45,8 @@ class UserModel {
       personalPhoto: json['personal_photo'] ?? '',
       nationalIdPhoto: json['national_id_photo'] ?? '',
       licencePhoto: json['licence_photo'] ?? '',
+      isStaff: json['is_staff'] ?? false,
+      isSuperUser: json['is_superuser'] ?? false,
     );
   }
 
@@ -58,6 +64,8 @@ class UserModel {
       'personal_photo': personalPhoto,
       'national_id_photo': nationalIdPhoto,
       'licence_photo': licencePhoto,
+      'is_staff': isStaff,
+      'is_superuser': isSuperUser,
     };
   }
 }
