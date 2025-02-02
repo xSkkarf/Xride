@@ -7,6 +7,10 @@ class UserModel {
   String phoneNumber;
   String address;
   String nationalId;
+  bool verified;
+  String personalPhoto;
+  String nationalIdPhoto;
+  String licencePhoto;
 
   UserModel({
     required this.username,
@@ -17,6 +21,10 @@ class UserModel {
     required this.phoneNumber,
     required this.address,
     required this.nationalId,
+    required this.verified,
+    required this.personalPhoto,
+    required this.nationalIdPhoto,
+    required this.licencePhoto,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +37,10 @@ class UserModel {
       phoneNumber: json['phone_number'] ?? '',
       address: json['address'] ?? '',
       nationalId: json['national_id'] ?? '',
+      verified: json['verified'] ?? false,
+      personalPhoto: json['personal_photo'] ?? '',
+      nationalIdPhoto: json['national_id_photo'] ?? '',
+      licencePhoto: json['licence_photo'] ?? '',
     );
   }
 
@@ -42,6 +54,10 @@ class UserModel {
       'phone_number': phoneNumber,
       'address': address,
       'national_id': nationalId,
+      'verified': verified,
+      'personal_photo': personalPhoto,
+      'national_id_photo': nationalIdPhoto,
+      'licence_photo': licencePhoto,
     };
   }
 }

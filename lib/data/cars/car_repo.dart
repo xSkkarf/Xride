@@ -36,9 +36,9 @@ class CarRepo {
         print('Failed to fetch nearby cars not 200');
         throw Exception('Failed to fetch nearby cars not 200');
       }
-    } catch (e) {
-      print('Failed to fetch nearby cars: $e');
-      throw Exception('Failed to fetch nearby cars');
+    } on DioException catch (e) {
+      print('Failed to fetch nearby cars: ${e.response!.data['error']}');
+      throw Exception('${e.response!.data['error']}');
     }
   }
   

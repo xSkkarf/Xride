@@ -5,16 +5,19 @@ import 'package:xride/cubit/location/location_cubit.dart';
 import 'package:xride/cubit/parking/parking_cubit.dart';
 import 'package:xride/cubit/payment/payment_cubit.dart';
 import 'package:xride/cubit/reservation/reservation_cubit.dart';
+import 'package:xride/cubit/user_photo/user_photo_cubit.dart';
 import 'package:xride/screens/car_details_screen.dart';
 import 'package:xride/screens/home_screen.dart';
 import 'package:xride/screens/login_screen.dart';
 import 'package:xride/screens/payment_screen.dart';
 import 'package:xride/screens/payment_web_screen.dart';
+import 'package:xride/screens/profile_screen.dart';
 import 'package:xride/screens/signup_screen.dart';
 import 'package:xride/services/car_service.dart';
 import 'package:xride/services/location_service.dart';
 import 'package:xride/services/parking_service.dart';
 import 'package:xride/services/payment_service.dart';
+import 'package:xride/services/user_photo_service.dart';
 
 class AppRouter {
   static const String loginScreen = "/";
@@ -23,6 +26,7 @@ class AppRouter {
   static const String paymentScreen = "/payment_screen";
   static const String paymentWebScreen = "/payment_web_screen";
   static const String carDetailsScreen = "/car_details_screen";
+  static const String profileScreen = "/profile_screen";
 
   Route? generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -58,6 +62,13 @@ class AppRouter {
         return MaterialPageRoute(
             builder: (BuildContext context) => PaymentWebView(
                 paymentArgs: settings.arguments as PaymentWebArgs));
+      case profileScreen:
+        return MaterialPageRoute(
+            builder: (BuildContext context) => BlocProvider(
+                create: (context) => UserPhotoCubit(UserPhotoService()),
+                child: const ProfileScreen(),
+              )
+            );
     }
     return null;
   }

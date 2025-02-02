@@ -156,7 +156,6 @@ class _HomeScreenState extends State<HomeScreen> {
       return sortedParkings;
     });
     return sortedParkings;
-    // await context.read<ReservationCubit>().releaseCar(carId, selectedParking.id, latitude, longitude);
   }
 
 
@@ -164,6 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: const Text('Xride'),
         actions: [
           IconButton(
@@ -286,207 +286,215 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
                   },
                 ),
-                BlocBuilder<CarCubit, CarState>(
-                  builder: (context, carState) {
-                    if (carState is CarsLoaded) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: DraggableScrollableSheet(
-                          initialChildSize: 0.1, // Default height of the sheet
-                          minChildSize: 0.1, // Minimum height (collapsed)
-                          maxChildSize: 0.45, // Maximum height (expanded)
-                          builder: (context, scrollController) {
-                            return Container(
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(16)),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 8.0,
-                                  ),
-                                ],
-                              ),
-                              child: BlocListener<ReservationCubit, ReservationState>(
-                                listener: (context, reservationState) {
-                                  if (reservationState is ReservationCancellingSuccess) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Car released successfully'),
-                                      ),
-                                    );
-                                    context.read<ReservationCubit>().checkActiveReservation();
-                                    context.read<ParkingCubit>().fetchParkings(latitude, longitude);
-                                    updateCars();
-                                    context.read<UserCubit>().fetchUserInfo();
-                                  }
-                                },
-                                child: 
-                                BlocBuilder<ReservationCubit,ReservationState>(
-                                  builder: (context, reservationState) {
-                                    if (reservationState is ReservationSuccess) {
-                                      // Display active reservation details
-                                      return SingleChildScrollView(
-                                        controller: scrollController,
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'Active Reservation',
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .headlineMedium,
-                                              ),
-                                              const SizedBox(height: 10),
-                                              Text(
-                                                'Car: ${reservationState.response['car_model']}',
-                                                style:
-                                                    const TextStyle(fontSize: 16),
-                                              ),
-                                              Text(
-                                                'Reservation Plan: ${reservationState.response['reservation_plan']}',
-                                                style:
-                                                    const TextStyle(fontSize: 16),
-                                              ),
-                                              Text(
-                                                'Start Time: ${reservationState.response['start_time']}',
-                                                style:
-                                                    const TextStyle(fontSize: 16),
-                                              ),
-                                              Text(
-                                                'End Time: ${reservationState.response['end_time']}',
-                                                style:
-                                                    const TextStyle(fontSize: 16),
-                                              ),
-                                              const SizedBox(height: 20),
-                                              ElevatedButton(
-                                                onPressed: () async {
-                                                  try {
-                                                    sortedParkings = await releaseCar(reservationState.response['car_id']);
-                                                  } catch (e) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      SnackBar(
-                                                        content: Text(e.toString().replaceAll('Exception:', '').trim()), // Remove "Exception:" from message
-                                                      ),
-                                                    );
-                                                  }
-                                                },
-                                                child: const Text('Release the car'),
-                                              ),
-                                            ],
-                                          ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: DraggableScrollableSheet(
+                    initialChildSize: 0.1, // Default height of the sheet
+                    minChildSize: 0.1, // Minimum height (collapsed)
+                    maxChildSize: 0.45, // Maximum height (expanded)
+                    builder: (context, scrollController) {
+                      return Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(16)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 8.0,
+                            ),
+                          ],
+                        ),
+                        child: BlocBuilder<CarCubit, CarState>(
+                          builder: (context, carState) {
+                            if (carState is CarsError) {
+                              return Padding(
+                                padding: const EdgeInsets.all(10.0),
+                                child: Text(
+                                  carState.error,
+                                  textAlign: TextAlign.center,
+                                )
+                              );
+                            } else if (carState is CarsLoaded) {
+                                return BlocListener<ReservationCubit, ReservationState>(
+                                  listener: (context, reservationState) {
+                                    if (reservationState is ReservationCancellingSuccess) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Car released successfully'),
                                         ),
                                       );
-                                    }
-                                    else if (reservationState is ReservationCancelling){
-                                      return Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: ListView.builder(
-                                            controller: scrollController,
-                                            itemCount: sortedParkings.length+1,
-                                            itemBuilder: (context, index) {
-                                              if (index == 0){
-                                                return Padding(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                                  child: ElevatedButton(
-                                                    onPressed: () {
-                                                      context.read<ReservationCubit>().cancelRelease();
-                                                    },
-                                                    child: const Text('Back'),
-                                                  ),
-                                                );
-                                              }
-                                              final parking = sortedParkings.keys.elementAt(index-1);
-                                              return Material(
-                                                color: Colors.white,
-                                                child: InkWell(
-                                                  onTap: () async {
-                                                      try {
-                                                        await context.read<ReservationCubit>().releaseCar(reservationState.carId, parking.id, latitude, longitude);
-                                                      } catch (e) {
-                                                        ScaffoldMessenger.of(context).showSnackBar(
-                                                          SnackBar(
-                                                            content: Text(e.toString().replaceAll('Exception:', '').trim()), // Remove "Exception:" from message
-                                                          ),
-                                                        );
-                                                      }
-                                                    },
-                                                  child: ListTile(
-                                                    title: Text(parking.parkName),
-                                                    subtitle: Text('Distance: ${(sortedParkings[parking]!/1000).toStringAsFixed(2)} km'),
-                                                    trailing: IconButton(onPressed: () {
-                                                        mapController!.animateCamera(CameraUpdate.newLatLng(LatLng(parking.latitude, parking.longitude)));
-                                                      },
-                                                      icon: const Icon(Icons.directions),
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                      );
-                                    }
-                                    else if (reservationState is ReservationLoading) {
-                                      return const Center(
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    }
-                                    else {
-                                      // Display list of available cars
-                                      return ListView.builder(
-                                        controller:
-                                            scrollController, // Enables scrolling in sheet
-                                        itemCount: carState.cars.length + 1,
-                                        itemBuilder: (context, index) {
-                                          if (index == 0) {
-                                            return Container(
-                                              margin: const EdgeInsets.fromLTRB(
-                                                  100, 10, 100, 10),
-                                              height: 5,
-                                              width: 10,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                color: Colors.grey,
-                                              ),
-                                            );
-                                          }
-                                          final car = carState.cars[index - 1];
-                                          return Material(
-                                            color: Colors.white,
-                                            child: InkWell(
-                                              onTap: () {
-                                                  onTapCar(car);
-                                                },
-                                              child: ListTile(
-                                                leading: const Icon(
-                                                  Icons.directions_car,
-                                                  color: Colors.blue,
-                                                ),
-                                                title: Text(car.carModel),
-                                                subtitle:
-                                                    Text('\$${car.bookingPrice12H}'),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      );
+                                      context.read<ReservationCubit>().checkActiveReservation();
+                                      context.read<ParkingCubit>().fetchParkings(latitude, longitude);
+                                      updateCars();
+                                      context.read<UserCubit>().fetchUserInfo();
                                     }
                                   },
-                                ),
-                              ),
-                            );
-                          },
+                                  child: 
+                                  BlocBuilder<ReservationCubit,ReservationState>(
+                                    builder: (context, reservationState) {
+                                      if (reservationState is ReservationSuccess) {
+                                        // Display active reservation details
+                                        return SingleChildScrollView(
+                                          controller: scrollController,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(16.0),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Active Reservation',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .headlineMedium,
+                                                ),
+                                                const SizedBox(height: 10),
+                                                Text(
+                                                  'Car: ${reservationState.response['car_model']}',
+                                                  style:
+                                                      const TextStyle(fontSize: 16),
+                                                ),
+                                                Text(
+                                                  'Reservation Plan: ${reservationState.response['reservation_plan']}',
+                                                  style:
+                                                      const TextStyle(fontSize: 16),
+                                                ),
+                                                Text(
+                                                  'Start Time: ${reservationState.response['start_time']}',
+                                                  style:
+                                                      const TextStyle(fontSize: 16),
+                                                ),
+                                                Text(
+                                                  'End Time: ${reservationState.response['end_time']}',
+                                                  style:
+                                                      const TextStyle(fontSize: 16),
+                                                ),
+                                                const SizedBox(height: 20),
+                                                ElevatedButton(
+                                                  onPressed: () async {
+                                                    try {
+                                                      sortedParkings = await releaseCar(reservationState.response['car_id']);
+                                                    } catch (e) {
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(
+                                                          content: Text(e.toString().replaceAll('Exception:', '').trim()), // Remove "Exception:" from message
+                                                        ),
+                                                      );
+                                                    }
+                                                  },
+                                                  child: const Text('Release the car'),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      else if (reservationState is ReservationCancelling){
+                                        return Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: ListView.builder(
+                                              controller: scrollController,
+                                              itemCount: sortedParkings.length+1,
+                                              itemBuilder: (context, index) {
+                                                if (index == 0){
+                                                  return Padding(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                                    child: ElevatedButton(
+                                                      onPressed: () {
+                                                        context.read<ReservationCubit>().cancelRelease();
+                                                      },
+                                                      child: const Text('Back'),
+                                                    ),
+                                                  );
+                                                }
+                                                final parking = sortedParkings.keys.elementAt(index-1);
+                                                return Material(
+                                                  color: Colors.white,
+                                                  child: InkWell(
+                                                    onTap: () async {
+                                                        try {
+                                                          await context.read<ReservationCubit>().releaseCar(reservationState.carId, parking.id, latitude, longitude);
+                                                        } catch (e) {
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(e.toString().replaceAll('Exception:', '').trim()), // Remove "Exception:" from message
+                                                            ),
+                                                          );
+                                                        }
+                                                      },
+                                                    child: ListTile(
+                                                      title: Text(parking.parkName),
+                                                      subtitle: Text('Distance: ${(sortedParkings[parking]!/1000).toStringAsFixed(2)} km'),
+                                                      trailing: IconButton(onPressed: () {
+                                                          mapController!.animateCamera(CameraUpdate.newLatLng(LatLng(parking.latitude, parking.longitude)));
+                                                        },
+                                                        icon: const Icon(Icons.directions),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                        );
+                                      }
+                                      else if (reservationState is ReservationLoading) {
+                                        return const Center(
+                                          child: CircularProgressIndicator(),
+                                        );
+                                      }
+                                      else {
+                                        // Display list of available cars
+                                        return ListView.builder(
+                                          controller:
+                                              scrollController, // Enables scrolling in sheet
+                                          itemCount: carState.cars.length + 1,
+                                          itemBuilder: (context, index) {
+                                            if (index == 0) {
+                                              return Container(
+                                                margin: const EdgeInsets.fromLTRB(
+                                                    100, 10, 100, 10),
+                                                height: 5,
+                                                width: 10,
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                  color: Colors.grey,
+                                                ),
+                                              );
+                                            }
+                                            final car = carState.cars[index - 1];
+                                            return Material(
+                                              color: Colors.white,
+                                              child: InkWell(
+                                                onTap: () {
+                                                    onTapCar(car);
+                                                  },
+                                                child: ListTile(
+                                                  leading: const Icon(
+                                                    Icons.directions_car,
+                                                    color: Colors.blue,
+                                                  ),
+                                                  title: Text(car.carModel),
+                                                  subtitle:
+                                                      Text('\$${car.bookingPrice12H}'),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        );
+                                      }
+                                    },
+                                  ),
+                                );
+                              }else {
+                                return const SizedBox.shrink();
+                              } 
+                          }
                         ),
                       );
-                    } else {
-                      return const SizedBox.shrink();
-                    }
-                  },
+                    },
+                  ),
                 )
               ],
             );
@@ -533,7 +541,7 @@ class UserDrawer extends StatelessWidget {
                 leading: const Icon(Icons.person),
                 title: const Text('Profile'),
                 onTap: () {
-                  Navigator.pushNamed(context, AppRouter.paymentScreen);
+                  Navigator.pushNamed(context, AppRouter.profileScreen);
                 },
               ),
               ListTile(
