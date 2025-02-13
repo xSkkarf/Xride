@@ -80,6 +80,9 @@ class AppRouter {
                   create: (context) => LocationCubit(LocationService())
               ),
               BlocProvider<LiveDataCubit>(create: (context) => LiveDataCubit()),
+              BlocProvider<ParkingCubit>(
+                  create: (context) => ParkingCubit(ParkingService())
+              ),
             ],
             child: const AdminHomeScreen()
           )

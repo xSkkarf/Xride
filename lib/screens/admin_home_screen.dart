@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:xride/cubit/live_data/live_data_cubit.dart';
 import 'package:xride/cubit/location/location_cubit.dart';
+import 'package:xride/cubit/parking/parking_cubit.dart';
 import 'package:xride/cubit/user/user_cubit.dart';
 import 'package:xride/my_widgets/user_drawer.dart';
 import 'package:xride/screens/admin_web_view_screen.dart';
@@ -20,12 +21,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   Marker? userMarker; // User's live location
   LatLng? userLocation; // Store user position
   int selectedIndex = 0; // Track selected tab
+  Set<Circle> allCircles = {};
 
   @override
   void initState() {
     super.initState();
     context.read<LocationCubit>().fetchInitialLocation(); // Get initial user location
     context.read<UserCubit>().fetchUserInfo(); // Fetch user data
+    context.read<ParkingCubit>().fetchParkings();
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -72,8 +75,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   zoom: 14,
                 ),
                 markers: carMarkers,
-                myLocationEnabled: true,
-                myLocationButtonEnabled: true,
+                circles: allCircles,
               );
             } else {
               return const Center(child: Text("Failed to fetch user location"));
@@ -125,6 +127,26 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   }
                 },
               ),
+              BlocListener<ParkingCubit, ParkingState>(
+            listener: (context, state) {
+              if (state is ParkingLoaded) {
+                setState(() {
+                  allCircles.addAll(
+                    state.parkings.map(
+                      (parking) => Circle(
+                        circleId: CircleId('parking_${parking.id}'),
+                        center: LatLng(parking.latitude, parking.longitude),
+                        radius: parking.radius*1000,
+                        fillColor: Colors.green.withOpacity(0.3),
+                        strokeWidth: 2,
+                        strokeColor: Colors.green.withOpacity(0.5),
+                      ),
+                    ),
+                  );
+                });
+              }
+            },
+          ),
             ],
             child: BlocBuilder<LocationCubit, LocationState>(
               builder: (context, locationState) {
@@ -138,8 +160,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                       zoom: 14,
                     ),
                     markers: carMarkers,
-                    myLocationEnabled: true,
-                    myLocationButtonEnabled: true,
+                    circles: allCircles,
                   );
                 } else {
                   return const Center(child: Text("Failed to fetch user location"));

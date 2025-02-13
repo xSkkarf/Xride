@@ -1,7 +1,7 @@
 
 class LiveDataModel {
   final int carId;
-  final int speed;
+  final double speed;
   final int fuel;
   final double latitude;
   final double longitude;

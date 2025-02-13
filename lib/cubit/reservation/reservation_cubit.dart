@@ -69,4 +69,14 @@ class ReservationCubit extends Cubit<ReservationState> {
   void cancelRelease() {
     emit(ReservationSuccess(_reservationResponse));
   }
+
+  void toggleLockCar(int carId) async {
+    try {
+      await reservationService.toggleLockCar(carId);
+    } catch(e){
+      rethrow;
+    }
+  }
+
+  
 }

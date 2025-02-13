@@ -10,7 +10,7 @@ class ParkingCubit extends Cubit<ParkingState> {
   final ParkingService parkingService;
   ParkingCubit(this.parkingService) : super(ParkingInitial());
 
-  void fetchParkings(double latitude, double longitude) async {
+  void fetchParkings() async {
     emit(ParkingLoading());
     try {
       final parkings = await parkingService.getParkings();

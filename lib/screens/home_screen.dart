@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
     context.read<LocationCubit>().fetchInitialLocation();
     context.read<UserCubit>().fetchUserInfo();
     context.read<ReservationCubit>().checkActiveReservation();
-    context.read<ParkingCubit>().fetchParkings(latitude, longitude);
+    context.read<ParkingCubit>().fetchParkings();
   }
 
   void toggleMarkers() {
@@ -160,6 +160,18 @@ class _HomeScreenState extends State<HomeScreen> {
     return sortedParkings;
   }
 
+  String formatDateString(DateTime dateTimeString) {
+    String stringDateTimeString = dateTimeString.toString();
+    // Get the date part and the time part separately
+    String datePart = stringDateTimeString.substring(0, 10); // '2025-02-03'
+    String timePart = stringDateTimeString.substring(11, 16); // '09:30:12'
+
+    // Combine them back without milliseconds
+    String formattedDate = '$datePart $timePart';
+
+    return formattedDate;
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -178,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 updateCars();
                 context.read<UserCubit>().fetchUserInfo();
                 context.read<ReservationCubit>().checkActiveReservation();
-                context.read<ParkingCubit>().fetchParkings(latitude, longitude);
+                context.read<ParkingCubit>().fetchParkings();
               },
               icon: const Icon(Icons.refresh)),
           IconButton(
@@ -327,7 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       );
                                       context.read<ReservationCubit>().checkActiveReservation();
-                                      context.read<ParkingCubit>().fetchParkings(latitude, longitude);
+                                      context.read<ParkingCubit>().fetchParkings();
                                       updateCars();
                                       context.read<UserCubit>().fetchUserInfo();
                                     }
@@ -346,7 +358,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  'Active Reservation',
+                                                  'Active Xride',
                                                   style: Theme.of(context)
                                                       .textTheme
                                                       .headlineMedium,
@@ -363,12 +375,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       const TextStyle(fontSize: 16),
                                                 ),
                                                 Text(
-                                                  'Start Time: ${reservationState.response['start_time']}',
+                                                  'Start Time: ${formatDateString(reservationState.response['start_time'])}',
                                                   style:
                                                       const TextStyle(fontSize: 16),
                                                 ),
                                                 Text(
-                                                  'End Time: ${reservationState.response['end_time']}',
+                                                  'End Time: ${formatDateString(reservationState.response['end_time'])}',
                                                   style:
                                                       const TextStyle(fontSize: 16),
                                                 ),
@@ -390,7 +402,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       child: const Text('Release the car'),
                                                     ),
                                                     const SizedBox(width: 10),
-                                                    
+                                                    Column(
+                                                      children: [
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            context.read<ReservationCubit>().toggleLockCar(reservationState.response['car_id']);
+                                                          },
+                                                          child: const Text('Unlock'),
+                                                        ),
+                                                        const SizedBox(height: 5),
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            context.read<ReservationCubit>().toggleLockCar(reservationState.response['car_id']);
+                                                          },
+                                                          child: const Text('Lock'),
+                                                        ),    
+
+                                                      ],
+                                                    )
                                                   ],
                                                 ),
                                               ],

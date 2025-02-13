@@ -1,8 +1,7 @@
 import 'dart:convert';
-
 import 'package:bloc/bloc.dart';
+import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:meta/meta.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:xride/constants/constants.dart';
 import 'package:xride/data/live_data/live_data_model.dart';
@@ -39,7 +38,7 @@ class LiveDataCubit extends Cubit<LiveDataState> {
 
           LiveDataModel car = LiveDataModel.fromJson(data['car_data']);
 
-          print('######## Speed: ${car.speed}');
+          print('######## lat: ${car.latitude}, longitude: ${car.longitude}');
 
           Set<Marker> newMarkers = {
             Marker(

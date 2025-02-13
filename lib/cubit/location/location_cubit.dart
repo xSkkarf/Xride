@@ -25,6 +25,12 @@ class LocationCubit extends Cubit<LocationState> {
           LatLng(locationData.latitude!, locationData.longitude!);
       print('Current location: $currentLatLng');
 
+      // Update location marker to use custom car icon
+      final BitmapDescriptor customCarIcon = await BitmapDescriptor.asset(
+        const ImageConfiguration(size: Size(48, 48)),
+        'assets/car_icon.png', // Path to car icon asset
+      );
+
       // Initial location loading
       emit(LocationLoaded(
         locationData: locationData,
@@ -32,6 +38,7 @@ class LocationCubit extends Cubit<LocationState> {
         currentLocationMarker: Marker(
           markerId: const MarkerId('current_location'),
           position: currentLatLng,
+          icon: customCarIcon
         ),
       ));
 
